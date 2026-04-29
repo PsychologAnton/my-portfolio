@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d dist",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -31,6 +31,6 @@
     "postcss": "^8.5.12",
     "tailwindcss": "^4.2.4",
     "vite": "^8.0.10"
-  }
-  "homepage": "https://reelz4biz.art",
+  },
+  "homepage": "https://reelz4biz.art"
 }
