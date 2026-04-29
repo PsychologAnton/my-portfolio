@@ -107,11 +107,16 @@ const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [isMuted, setIsMuted] = React.useState(false);
+  
+  // НОВОЕ: Состояние видимости контроллеров
+  const [showControls, setShowControls] = React.useState(false);
 
-  // Функция переключения Play/Pause
   const togglePlay = (e) => {
     if (e) e.stopPropagation();
     if (!videoRef.current) return;
+    
+    // При нажатии показываем управление
+    setShowControls(true);
     
     if (videoRef.current.paused) {
       videoRef.current.play();
@@ -165,8 +170,10 @@ const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
       </button>
       
       <div 
-        className="relative h-full max-h-[90vh] aspect-[9/16] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-black"
+        className="relative h-full max-h-[90vh] aspect-[9/16] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-black group"
         onClick={(e) => e.stopPropagation()}
+        onMouseEnter={() => setShowControls(true)}
+        onMouseLeave={() => setShowControls(false)}
       >
         {isLoading && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B0F19]/80 backdrop-blur-md">
@@ -190,8 +197,8 @@ const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
           onEnded={() => setIsPlaying(false)}
         />
         
-        <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-          
+{/* Панель теперь зависит от showControls и isLoading */}
+        <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/90 via-transparent to-transparent transition-all duration-500 ${(showControls && !isLoading) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="pointer-events-auto space-y-4">
             {/* Интерактивный прогресс-бар */}
             <div 
@@ -267,15 +274,15 @@ const HeroSection = () => (
     id="home" 
     className="relative min-h-[75vh] flex flex-col items-center justify-center text-center rounded-[3rem] overflow-hidden border border-[var(--border-color)] shadow-2xl transition-colors duration-500"
   >
-      <div className="absolute inset-0 -z-10 bg-card-custom">
-        <img 
-          src="./content/background.png" 
-          className="w-full h-full object-cover opacity-80 transition-opacity duration-500" 
-          alt="Background" 
-        />
-        {/* Равномерное затемнение как в Showreel */}
-        <div className="absolute inset-0 bg-black/20"></div>
-      </div>
+    <div className="absolute inset-0 -z-10 bg-card-custom">
+      <img 
+        src="./content/background.png" 
+        className="w-full h-full object-cover scale-110 opacity-90 brightness-90 contrast-110 transition-opacity duration-500" 
+        alt="Background" 
+      />
+      {/* Слой высококачественного размытия (Backdrop Blur) */}
+      <div className="absolute inset-0 backdrop-blur-[6px] bg-black/20"></div>
+    </div>
 
     {/* Плашка "Свободен" — теперь всегда в одном стиле */}
     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mb-8">
@@ -437,11 +444,13 @@ const Navbar = ({ theme, onToggleTheme }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Найти в компоненте Navbar:
+// Найти в компоненте Navbar:
   const navLinks = [
     { name: 'Главная', href: '#home' },
     { name: 'Showreel', href: '#showreel' },
     { name: 'Портфолио', href: '#portfolio' },
-    { name: 'Обо мне', href: '#about' }, // Добавлено сюда
+    { name: 'Обо мне', href: '#about' },
+    { name: 'Инструменты', href: '#tools' }, // Добавить это
     { name: 'Процесс', href: '#workflow' },
     { name: 'Прайс', href: '#pricing' },
   ];
@@ -449,21 +458,19 @@ const Navbar = ({ theme, onToggleTheme }) => {
   return (
     <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
       {/* ОСНОВНАЯ ПАНЕЛЬ */}
-      <div className="bg-card-custom backdrop-blur-xl border border-[var(--border-color)] rounded-full px-6 py-4 flex items-center justify-between w-full max-w-4xl shadow-2xl transition-all duration-300">
-        
+      <div className="bg-card-custom backdrop-blur-xl border border-[var(--border-color)] rounded-full px-6 py-4 flex items-center justify-between w-full max-w-6xl shadow-2xl transition-all duration-300"> 
         {/* ЛОГОТИП */}
         <a href="#home" className="font-primary text-xl text-main-custom tracking-tight hover:text-[#5C6BFF] transition-colors uppercase">
           REELZ<span className="text-[#5C6BFF]">4BIZ</span>
         </a>
 
-        {/* ДЕСКТОПНЫЕ ССЫЛКИ */}
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a 
-              key={link.name} 
-              href={link.href} 
-              className="font-secondary text-sm font-medium text-muted-custom hover:text-[#5C6BFF] transition-colors"
-            >
+      <div className="hidden md:flex items-center gap-4 lg:gap-6">
+        {navLinks.map((link) => (
+          <a 
+            key={link.name} 
+            href={link.href} 
+            className="font-secondary text-[13px] lg:text-sm font-medium text-muted-custom hover:text-[#5C6BFF] transition-colors whitespace-nowrap"
+          >
               {link.name}
             </a>
           ))}
@@ -566,8 +573,8 @@ export default function App() {
       <ShowreelSection onPlay={(url) => setModalData({ url, poster: './content/10.png' })} />
       
       <PortfolioSection onPlay={(url, poster) => setModalData({ url, poster })} />
-      <AboutSection /> {/* Добавить этот компонент здесь */}
-      {/* Остальные секции */}
+      <AboutSection /> 
+      <ToolsSection />
       <WorkflowSection />
       <PricingSection />
       
@@ -618,7 +625,6 @@ const WorkflowStep = ({ number, title, description, icon: Icon }) => (
     {/* Заголовок в стиле "Этапы сотрудничества" */}
     <div className="text-center mb-16">
       <h2 className="font-primary text-5xl md:text-6xl text-white mb-4 uppercase drop-shadow-md">Обо мне</h2>
-      <div className="w-24 h-1 bg-[#5C6BFF] mx-auto rounded-full"></div>
     </div>
 
     {/* Карточка "Обо мне" */}
@@ -670,6 +676,36 @@ const WorkflowStep = ({ number, title, description, icon: Icon }) => (
     </div>
   </section>
 );
+const ToolsSection = () => {
+  const tools = [
+    { title: "Davinci Resolve", desc: "Большая часть работы: профессиональный монтаж и цветокоррекция.", icon: Scissors },
+    { title: "After Effects", desc: "Сложные спецэффекты, моушн-графика и композитинг.", icon: Wand2 },
+    { title: "KlingAI", desc: "Генерация кинематографичного видео и создание UGC контента.", icon: Film },
+    { title: "HeyGen", desc: "Создание полноценных ИИ-аватаров и безупречный липсинк.", icon: Sparkles },
+    { title: "Topaz AI", desc: "Интеллектуальный апскейл и восстановление качества видео.", icon: Maximize },
+    { title: "Nano Banana PRO", desc: "Продвинутая работа с ИИ-изображениями и ассетами.", icon: MonitorPlay },
+    { title: "Gemini", desc: "Генерация креативных идей и проработка вирусных сценариев.", icon: MessageSquare },
+  ];
+
+  return (
+    <section id="tools" className="scroll-mt-32">
+      <div className="text-center mb-16">
+        <h2 className="font-primary text-5xl md:text-6xl text-white mb-4 uppercase drop-shadow-md">Мои инструменты</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {tools.map((tool, idx) => (
+          <WorkflowStep 
+            key={idx}
+            number={idx + 1}
+            title={tool.title}
+            description={tool.desc}
+            icon={tool.icon}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};
   const WorkflowSection = () => (
     <section id="workflow" className="scroll-mt-32">
       <div className="text-center mb-20">
