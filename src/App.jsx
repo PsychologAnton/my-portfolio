@@ -267,15 +267,15 @@ const HeroSection = () => (
     id="home" 
     className="relative min-h-[75vh] flex flex-col items-center justify-center text-center rounded-[3rem] overflow-hidden border border-[var(--border-color)] shadow-2xl transition-colors duration-500"
   >
-    <div className="absolute inset-0 -z-10 bg-card-custom">
-      <img 
-        src="./content/background.png" 
-        className="w-full h-full object-cover scale-105 blur-[2px] opacity-40 dark:opacity-60 transition-opacity duration-500" 
-        alt="Background" 
-      />
-      {/* Мягкий градиент, который подстраивается под цвет фона сайта */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[var(--bg-body)]"></div>
-    </div>
+      <div className="absolute inset-0 -z-10 bg-card-custom">
+        <img 
+          src="./content/background.png" 
+          className="w-full h-full object-cover opacity-80 transition-opacity duration-500" 
+          alt="Background" 
+        />
+        {/* Равномерное затемнение как в Showreel */}
+        <div className="absolute inset-0 bg-black/20"></div>
+      </div>
 
     {/* Плашка "Свободен" — теперь всегда в одном стиле */}
     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mb-8">
