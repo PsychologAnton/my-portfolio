@@ -276,7 +276,7 @@ const HeroSection = () => (
   >
     <div className="absolute inset-0 -z-10 bg-card-custom">
       <img 
-        src="./content/background.png" 
+        src="./content/background.webp" 
         className="w-full h-full object-cover scale-110 opacity-90 brightness-90 contrast-110 transition-opacity duration-500" 
         alt="Background" 
       />
@@ -318,7 +318,7 @@ const ShowreelSection = ({ onPlay }) => (
       <div className="w-24 h-1 bg-[#5C6BFF] mx-auto rounded-full"></div>
     </div>
     <div className="relative max-w-4xl mx-auto aspect-video md:aspect-[21/9] rounded-[2.5rem] overflow-hidden border border-[var(--border-color)] shadow-2xl">
-      <img src="./content/10.png" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80" alt="Showreel" />
+      <img src="./content/10.webp" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80" alt="Showreel" />
       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
         <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-2xl">
           <PlayCircle size={48} className="text-white fill-white/20" />
@@ -359,63 +359,63 @@ const PortfolioSection = ({ onPlay }) => {
       { 
         title: "Интервью Сергея Минаева", 
         category: "Interview", 
-        thumbnailUrl: "./content/1.png", 
+        thumbnailUrl: "./content/1.webp", 
         videoUrl: "./content/1.mp4",
         features: ["Multi-cam Edit", "Dynamic Subs", "Audio Clean-up"]
       },
       { 
         title: "ИИ-инфлюенсер стоматолог", 
         category: "AI Content", 
-        thumbnailUrl: "./content/2.png", 
+        thumbnailUrl: "./content/2.webp", 
         videoUrl: "./content/2.mp4",
         features: ["AI Avatar", "Lip Sync", "Virtual Studio"]
       },
       { 
         title: "Сервис оплаты подписок", 
         category: "Motion Design", 
-        thumbnailUrl: "./content/3.png", 
+        thumbnailUrl: "./content/3.webp", 
         videoUrl: "./content/3.mp4",
         features: ["3D Glassmorphism", "App UI Demo", "SFX"]
       },
       { 
         title: "Кроссовки Puma", 
         category: "Commercial", 
-        thumbnailUrl: "./content/4.png", 
+        thumbnailUrl: "./content/4.webp", 
         videoUrl: "./content/4.mp4",
         features: ["Kinetic Typography", "CGI Assets", "Color Grading"]
       },
       { 
         title: "UGC Bombar", 
         category: "Lifestyle", 
-        thumbnailUrl: "./content/5.png", 
+        thumbnailUrl: "./content/5.webp", 
         videoUrl: "./content/5.mp4",
         features: ["Fast-paced Cut", "Trendy Transitions", "Natural Look"]
       },
       { 
         title: "Коттедж Эльбрус", 
         category: "Real Estate", 
-        thumbnailUrl: "./content/6.png", 
+        thumbnailUrl: "./content/6.webp", 
         videoUrl: "./content/6.mp4",
         features: ["Drone Footage", "Info-graphics", "Ambient Sound"]
       },
       { 
         title: "Сериал Городок", 
         category: "Entertainment", 
-        thumbnailUrl: "./content/7.png", 
+        thumbnailUrl: "./content/7.webp", 
         videoUrl: "./content/7.mp4",
         features: ["Retro VFX", "Sound Design"]
       },
       { 
         title: "Dodo Pizza Vlog", 
         category: "Food / Promo", 
-        thumbnailUrl: "./content/8.png", 
+        thumbnailUrl: "./content/8.webp", 
         videoUrl: "./content/8.mp4",
         features: ["Macro Shots", "Stop Motion", "Music Sync"]
       },
       { 
         title: "Доставка цветов", 
         category: "Product", 
-        thumbnailUrl: "./content/9.png", 
+        thumbnailUrl: "./content/9.webp", 
         videoUrl: "./content/9.mp4",
         features: ["Full AI Ads", "Soft Lighting"]
       },
@@ -560,7 +560,7 @@ export default function App() {
       <HeroSection />
       
       {/* Шоурил сразу под главным блоком */}
-      <ShowreelSection onPlay={(url) => setModalData({ url, poster: './content/10.png' })} />
+      <ShowreelSection onPlay={(url) => setModalData({ url, poster: './content/10.webp' })} />
       
       <PortfolioSection onPlay={(url, poster) => setModalData({ url, poster })} />
       <AboutSection /> 
@@ -624,7 +624,7 @@ const WorkflowStep = ({ number, title, description, icon: Icon }) => (
         {/* Вертикальное фото */}
         <div className="w-full lg:w-[40%] relative overflow-hidden h-[500px] md:h-auto">
           <img 
-            src="./content/myphoto.png" 
+            src="./content/myphoto.webp" 
             alt="Горбенко Антон" 
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
