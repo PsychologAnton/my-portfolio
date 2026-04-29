@@ -259,7 +259,7 @@ const Layout = ({ children, theme, onToggleTheme }) => (
     <footer className="border-t border-[var(--border-color)] bg-card-custom backdrop-blur-md py-12 mt-auto">
       <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-main-custom">
         <div className="font-primary text-xl uppercase">REELZ<span className="text-[#5C6BFF]">4BIZ</span></div>
-        <p className="font-secondary text-sm opacity-60 font-light">© {new Date().getFullYear()} Все права защищены.</p>
+        <p className="font-secondary text-sm opacity-60 font-light">© {new Date().getFullYear()} Горбенко Антон. Все права защищены.</p>
       </div>
     </footer>
   </div>
@@ -443,43 +443,37 @@ const PortfolioSection = ({ onPlay }) => {
 const Navbar = ({ theme, onToggleTheme }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Найти в компоненте Navbar:
-// Найти в компоненте Navbar:
   const navLinks = [
     { name: 'Главная', href: '#home' },
     { name: 'Showreel', href: '#showreel' },
     { name: 'Портфолио', href: '#portfolio' },
     { name: 'Обо мне', href: '#about' },
-    { name: 'Инструменты', href: '#tools' }, // Добавить это
+    { name: 'Инструменты', href: '#tools' },
     { name: 'Процесс', href: '#workflow' },
     { name: 'Прайс', href: '#pricing' },
   ];
 
   return (
     <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
-      {/* ОСНОВНАЯ ПАНЕЛЬ */}
       <div className="bg-card-custom backdrop-blur-xl border border-[var(--border-color)] rounded-full px-6 py-4 flex items-center justify-between w-full max-w-6xl shadow-2xl transition-all duration-300"> 
-        {/* ЛОГОТИП */}
         <a href="#home" className="font-primary text-xl text-main-custom tracking-tight hover:text-[#5C6BFF] transition-colors uppercase">
           REELZ<span className="text-[#5C6BFF]">4BIZ</span>
         </a>
 
-      <div className="hidden md:flex items-center gap-4 lg:gap-6">
-        {navLinks.map((link) => (
-          <a 
-            key={link.name} 
-            href={link.href} 
-            className="font-secondary text-[13px] lg:text-sm font-medium text-muted-custom hover:text-[#5C6BFF] transition-colors whitespace-nowrap"
-          >
+        {/* ЗАМЕНЕНО: md:flex на lg:flex */}
+        <div className="hidden lg:flex items-center gap-4 lg:gap-6">
+          {navLinks.map((link) => (
+            <a 
+              key={link.name} 
+              href={link.href} 
+              className="font-secondary text-[13px] lg:text-sm font-medium text-muted-custom hover:text-[#5C6BFF] transition-colors whitespace-nowrap"
+            >
               {link.name}
             </a>
           ))}
         </div>
 
-        {/* ПРАВАЯ ЧАСТЬ: ТЕМА, КНОПКА И МОБИЛЬНОЕ МЕНЮ */}
-        <div className="flex items-center gap-2 md:gap-4">
-          
-          {/* КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ */}
+        <div className="flex items-center gap-2 lg:gap-4">
           <button 
             onClick={onToggleTheme}
             className="p-2.5 rounded-full hover:bg-white/10 transition-colors text-main-custom flex items-center justify-center"
@@ -492,17 +486,17 @@ const Navbar = ({ theme, onToggleTheme }) => {
             )}
           </button>
 
-          {/* КНОПКА СВЯЗИ (ТОЛЬКО ДЕСКТОП) */}
+          {/* ЗАМЕНЕНО: md:block на lg:block */}
           <a 
             href="#contact" 
-            className="hidden md:block font-secondary text-sm font-semibold bg-[#5C6BFF] text-white px-6 py-2.5 rounded-full hover:bg-[#5C6BFF]/80 transition-all active:scale-95"
+            className="hidden lg:block font-secondary text-sm font-semibold bg-[#5C6BFF] text-white px-6 py-2.5 rounded-full hover:bg-[#5C6BFF]/80 transition-all active:scale-95"
           >
             Связаться
           </a>
           
-          {/* БУРГЕР-МЕНЮ (МОБИЛЬНОЕ) */}
+          {/* ЗАМЕНЕНО: md:hidden на lg:hidden */}
           <button 
-            className="md:hidden p-2 text-main-custom" 
+            className="lg:hidden p-2 text-main-custom" 
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -510,9 +504,8 @@ const Navbar = ({ theme, onToggleTheme }) => {
         </div>
       </div>
 
-      {/* ВЫПАДАЮЩЕЕ МОБИЛЬНОЕ МЕНЮ */}
       {isOpen && (
-        <div className="absolute top-20 left-4 right-4 bg-card-custom backdrop-blur-2xl border border-[var(--border-color)] rounded-[2rem] p-8 flex flex-col gap-6 shadow-2xl md:hidden animate-fade-in overflow-hidden">
+        <div className="absolute top-20 left-4 right-4 bg-card-custom backdrop-blur-2xl border border-[var(--border-color)] rounded-[2rem] p-8 flex flex-col gap-6 shadow-2xl lg:hidden animate-fade-in overflow-hidden">
           <div className="flex flex-col gap-4">
             {navLinks.map((link) => (
               <a 
@@ -525,9 +518,7 @@ const Navbar = ({ theme, onToggleTheme }) => {
               </a>
             ))}
           </div>
-          
           <div className="h-px bg-[var(--border-color)] w-full my-2"></div>
-          
           <a 
             href="#contact" 
             onClick={() => setIsOpen(false)}
@@ -540,7 +531,6 @@ const Navbar = ({ theme, onToggleTheme }) => {
     </nav>
   );
 };
-
 // ==========================================
 // ГЛАВНЫЙ КОМПОНЕНТ
 // ==========================================
@@ -629,10 +619,10 @@ const WorkflowStep = ({ number, title, description, icon: Icon }) => (
 
     {/* Карточка "Обо мне" */}
     <div className="max-w-5xl mx-auto bg-card-custom backdrop-blur-2xl border border-[var(--border-color)] rounded-[3rem] overflow-hidden shadow-2xl transition-all duration-500 hover:border-[#5C6BFF]/30 group">
-      <div className="flex flex-col md:flex-row items-stretch">
+      <div className="flex flex-col lg:flex-row items-stretch">
         
         {/* Вертикальное фото */}
-        <div className="w-full md:w-[40%] relative overflow-hidden h-[500px] md:h-auto">
+        <div className="w-full lg:w-[40%] relative overflow-hidden h-[500px] md:h-auto">
           <img 
             src="./content/myphoto.png" 
             alt="Горбенко Антон" 
@@ -642,7 +632,7 @@ const WorkflowStep = ({ number, title, description, icon: Icon }) => (
         </div>
 
         {/* Инфо-блок */}
-        <div className="w-full md:w-[60%] p-8 md:p-12 flex flex-col justify-center">
+        <div className="w-full lg:w-[60%] p-8 md:p-12 flex flex-col justify-center">
           <div className="mb-6">
             <h3 className="font-primary text-3xl md:text-4xl text-white mb-2 uppercase drop-shadow-md">
               Горбенко Антон
@@ -692,7 +682,7 @@ const ToolsSection = () => {
       <div className="text-center mb-16">
         <h2 className="font-primary text-5xl md:text-6xl text-white mb-4 uppercase drop-shadow-md">Мои инструменты</h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {tools.map((tool, idx) => (
           <WorkflowStep 
             key={idx}
@@ -774,7 +764,7 @@ const PricingSection = () => (
       </div>
 
       {/* Основные тарифы */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-20">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-20">
         <PricingCard 
           title="Basic" 
           price="1 000 ₽" 
