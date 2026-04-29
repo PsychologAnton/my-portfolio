@@ -680,7 +680,9 @@ const ToolsSection = () => {
   return (
     <section id="tools" className="scroll-mt-32">
       <div className="text-center mb-16">
-        <h2 className="font-primary text-5xl md:text-6xl text-white mb-4 uppercase drop-shadow-md">Мои инструменты</h2>
+        <h2 className="font-primary text-3xl sm:text-5xl md:text-6xl text-white mb-4 uppercase drop-shadow-md break-words">
+          Мои инструменты
+        </h2>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {tools.map((tool, idx) => (
@@ -699,7 +701,9 @@ const ToolsSection = () => {
   const WorkflowSection = () => (
     <section id="workflow" className="scroll-mt-32">
       <div className="text-center mb-20">
-        <h2 className="font-primary text-5xl md:text-6xl text-white mb-4 uppercase drop-shadow-md">Этапы сотрудничества</h2>
+        <h2 className="font-primary text-3xl sm:text-5xl md:text-6xl text-white mb-4 uppercase drop-shadow-md break-words">
+          Этапы сотрудничества
+        </h2>
         <p className="font-secondary text-gray-400 font-light">Прозрачный процесс от первой идеи до начала работы</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
