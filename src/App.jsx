@@ -42,7 +42,11 @@ const GlobalStyles = () => (
       font-family: 'Raleway', sans-serif;
       transition: background-color 0.4s ease, color 0.4s ease;
     }
-    
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      /* остальной твой код... */
+    }
     .font-primary { font-family: 'Montserrat', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
     .font-secondary { font-family: 'Raleway', sans-serif; }
 
@@ -75,10 +79,8 @@ const GlobalStyles = () => (
   `}} />
 );
 const AnimatedOrbs = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {/* Синяя сфера слева сверху */}
+  <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
     <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-[#5C6BFF]/10 blur-[120px] animate-float delay-1"></div>
-    
     {/* Пурпурная сфера справа по центру */}
     <div className="absolute top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#312E81]/20 blur-[130px] animate-float"></div>
     
@@ -92,11 +94,9 @@ const AnimatedOrbs = () => (
 // ==========================================
 const MeshBackground = () => (
   <div className="fixed inset-0 w-full h-full -z-10 mesh-gradient pointer-events-none">
-    {/* Добавляем сферы здесь */}
     <AnimatedOrbs />
-    
-    {/* Твой существующий шум */}
-    <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+    {/* Добавили hidden md:block для шума */}
+    <div className="hidden md:block absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,...")' }}></div>
   </div>
 );
 
@@ -248,7 +248,7 @@ const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
 // ... (Navbar остается прежним)
 
 const Layout = ({ children, theme, onToggleTheme }) => (
-  <div className="relative min-h-screen font-secondary selection:bg-[#5C6BFF]/30 transition-colors duration-400">
+  <div className="relative min-h-screen font-secondary selection:bg-[#5C6BFF]/30 transition-colors duration-400 overflow-x-hidden w-full">
     <GlobalStyles />
     <MeshBackground />
     {/* Теперь пропсы передаются в Navbar */}
@@ -293,7 +293,7 @@ const HeroSection = () => (
     </div>
     
     {/* Заголовок — зафиксирован белый и синий */}
-    <h1 className="font-primary text-5xl md:text-7xl lg:text-8xl mb-6 leading-[1.1] uppercase drop-shadow-2xl">
+    <h1 className="font-primary text-4xl md:text-7xl lg:text-8xl mb-6 leading-[1.1] uppercase drop-shadow-2xl break-words px-2">
       <span className="text-white">Визуальное</span> <br />
       <span className="text-[#5C6BFF]">Искусство</span>
     </h1>
