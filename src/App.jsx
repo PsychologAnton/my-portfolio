@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle } from 'lucide-react';
+import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle, MessageSquare, FileText, FileCheck, CreditCard} from 'lucide-react';
 
 // ==========================================
 // 1. КОНФИГУРАЦИЯ И СТИЛИ
@@ -168,7 +168,11 @@ const HeroSection = () => (
 
 // НОВЫЙ БЛОК: ШОУРИЛ
 const ShowreelSection = ({ onPlay }) => (
-  <section className="relative group cursor-pointer" onClick={() => onPlay('./content/10.mp4')}>
+  <section 
+    id="showreel" 
+    className="relative group cursor-pointer scroll-mt-32" 
+    onClick={() => onPlay('./content/10.mp4')}
+  >
     <div className="text-center mb-12">
       <h2 className="font-primary text-3xl md:text-5xl text-white mb-4 uppercase">Showreel 2026</h2>
       <div className="w-24 h-1 bg-[#5C6BFF] mx-auto rounded-full"></div>
@@ -251,8 +255,10 @@ const PortfolioSection = ({ onPlay }) => {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+// Найти в компоненте Navbar
   const navLinks = [
     { name: 'Главная', href: '#home' },
+    { name: 'Showreel', href: '#showreel' }, // Добавили эту строку
     { name: 'Портфолио', href: '#portfolio' },
     { name: 'Процесс', href: '#workflow' },
     { name: 'Прайс', href: '#pricing' },
@@ -338,13 +344,34 @@ const WorkflowStep = ({ number, title, description, icon: Icon }) => (
   const WorkflowSection = () => (
     <section id="workflow" className="scroll-mt-32">
       <div className="text-center mb-20">
-        <h2 className="font-primary text-5xl md:text-6xl text-white mb-4 uppercase">Этапы производства</h2>
+        <h2 className="font-primary text-5xl md:text-6xl text-white mb-4 uppercase">Этапы сотрудничества</h2>
+        <p className="font-secondary text-gray-400 font-light">Прозрачный процесс от первой идеи до начала работы</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <WorkflowStep number="1" title="Стратегия" description="Анализируем тренды и цели вашего бизнеса." icon={MonitorPlay} />
-        <WorkflowStep number="2" title="Монтаж" description="Динамичная нарезка для удержания внимания." icon={Scissors} />
-        <WorkflowStep number="3" title="Упаковка" description="Цвет, саунд-дизайн и субтитры." icon={Film} />
-        <WorkflowStep number="4" title="Результат" description="Готовый ролик под алгоритмы соцсетей." icon={CheckCircle2} />
+        <WorkflowStep 
+          number="1" 
+          title="Предложение" 
+          description="Вы оставляете заявку с описанием ваших идей и техническим заданием." 
+          icon={MessageSquare} 
+        />
+        <WorkflowStep 
+          number="2" 
+          title="Черновая смета" 
+          description="Составляем предварительный список всех работ и расчет стоимости." 
+          icon={FileText} 
+        />
+        <WorkflowStep 
+          number="3" 
+          title="Согласование" 
+          description="Финальная смета после обсуждения деталей и утверждение сроков." 
+          icon={FileCheck} 
+        />
+        <WorkflowStep 
+          number="4" 
+          title="Оплата" 
+          description="Внесение оплаты и запуск проекта." 
+          icon={CreditCard} 
+        />
       </div>
     </section>
   );
@@ -366,15 +393,67 @@ const WorkflowStep = ({ number, title, description, icon: Icon }) => (
     </div>
   );
   
-  const PricingSection = () => (
+const PricingSection = () => (
     <section id="pricing" className="scroll-mt-32">
-      <div className="text-center mb-20">
-        <h2 className="font-primary text-5xl md:text-7xl text-white mb-4 uppercase">Пакеты услуг</h2>
+      <div className="text-center mb-16">
+        <h2 className="font-primary text-5xl md:text-7xl text-white mb-6 uppercase">Стоимость</h2>
+        <p className="font-secondary text-gray-400 font-light max-w-2xl mx-auto">
+          Цены являются примерными. Для каждого проекта составляется <span className="text-[#5C6BFF] font-semibold">индивидуальная смета</span> в зависимости от сложности ТЗ.
+        </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        <PricingCard title="Starter" price="$150" features={["5 Reels в месяц", "Базовый монтаж", "Субтитры"]} />
-        <PricingCard title="Growth" price="$400" isPopular={true} features={["15 Reels в месяц", "Динамичный монтаж", "Sound Design"]} />
-        <PricingCard title="Pro" price="$800" features={["30 Reels в месяц", "VFX элементы", "Сценарии"]} />
+
+      {/* Основные тарифы */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-20">
+        <PricingCard 
+          title="Basic" 
+          price="1 000 ₽" 
+          features={[
+            "Нарезка готового видео",
+            "Цветокоррекция",
+            "Динамичные субтитры",
+            "Подбор музыки"
+          ]} 
+        />
+        <PricingCard 
+          title="Advanced" 
+          price="2 500 ₽" 
+          isPopular={true} 
+          features={[
+            "Все из тарифа Basic",
+            "ИИ-вставки и генерации",
+            "Элементы Motion-графики",
+            "Вставки с ИИ-ассистентом"
+          ]} 
+        />
+        <PricingCard 
+          title="Complex" 
+          price="4 000 ₽" 
+          features={[
+            "Сложный монтаж (много ИИ)",
+            "Продвинутая анимация",
+            "Моушн-дизайн",
+            "Липсинк (Lip Sync)"
+          ]} 
+        />
+      </div>
+
+      {/* Блок скидок */}
+      <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-md border border-white/10 rounded-[2.5rem] p-8 md:p-12 text-center">
+        <h3 className="font-primary text-2xl text-white mb-8 uppercase tracking-wider">Оптовые скидки</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="p-6 rounded-2xl bg-[#0B0F19]/50 border border-[#5C6BFF]/20">
+            <div className="font-primary text-3xl text-[#5C6BFF] mb-1">от 10 Reels</div>
+            <div className="font-secondary text-sm text-gray-400 uppercase tracking-widest font-bold">скидка 10%</div>
+          </div>
+          <div className="p-6 rounded-2xl bg-[#0B0F19]/50 border border-[#5C6BFF]/20">
+            <div className="font-primary text-3xl text-[#5C6BFF] mb-1">от 50 Reels</div>
+            <div className="font-secondary text-sm text-gray-400 uppercase tracking-widest font-bold">скидка 20%</div>
+          </div>
+          <div className="p-6 rounded-2xl bg-[#0B0F19]/50 border border-[#5C6BFF]/20">
+            <div className="font-primary text-3xl text-[#5C6BFF] mb-1">от 100 Reels</div>
+            <div className="font-secondary text-sm text-gray-400 uppercase tracking-widest font-bold">скидка 30%</div>
+          </div>
+        </div>
       </div>
     </section>
   );
