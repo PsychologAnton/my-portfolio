@@ -41,7 +41,32 @@ const GlobalStyles = () => (
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -50px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+      100% { transform: translate(0, 0) scale(1); }
+    }
+
+    .animate-float {
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .delay-1 { animation-delay: -5s; animation-duration: 25s; }
+    .delay-2 { animation-delay: -10s; animation-duration: 30s; }
   `}} />
+);
+const AnimatedOrbs = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {/* Синяя сфера слева сверху */}
+    <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-[#5C6BFF]/10 blur-[120px] animate-float delay-1"></div>
+    
+    {/* Пурпурная сфера справа по центру */}
+    <div className="absolute top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#312E81]/20 blur-[130px] animate-float"></div>
+    
+    {/* Индиго сфера снизу слева */}
+    <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] rounded-full bg-[#1E1B4B]/30 blur-[100px] animate-float delay-2"></div>
+  </div>
 );
 
 // ==========================================
@@ -49,6 +74,10 @@ const GlobalStyles = () => (
 // ==========================================
 const MeshBackground = () => (
   <div className="fixed inset-0 w-full h-full -z-10 mesh-gradient pointer-events-none">
+    {/* Добавляем сферы здесь */}
+    <AnimatedOrbs />
+    
+    {/* Твой существующий шум */}
     <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
   </div>
 );
@@ -72,6 +101,7 @@ const VideoModal = ({ isOpen, videoUrl, onClose }) => {
           controls
           autoPlay
           playsInline
+          preload="metadata" // Загрузит только метаданные, чтобы знать размер
         />
       </div>
     </div>
