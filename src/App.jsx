@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle, MessageSquare, FileText, FileCheck, CreditCard} from 'lucide-react';
+import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle, MessageSquare, FileText, FileCheck, CreditCard, Pause, VolumeX, Maximize, RotateCcw} from 'lucide-react';
 
 // ==========================================
 // 1. КОНФИГУРАЦИЯ И СТИЛИ
@@ -83,47 +83,139 @@ const MeshBackground = () => (
 );
 
 const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
+  const videoRef = React.useRef(null);
+  const progressRef = React.useRef(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const [isMuted, setIsMuted] = React.useState(false);
+
+  // Функция переключения Play/Pause
+  const togglePlay = (e) => {
+    if (e) e.stopPropagation();
+    if (!videoRef.current) return;
+    
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  // Перемотка кликом по полоске
+  const handleScrub = (e) => {
+    e.stopPropagation();
+    if (!videoRef.current || !progressRef.current) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const scrubTime = ((e.clientX - rect.left) / rect.width) * videoRef.current.duration;
+    videoRef.current.currentTime = scrubTime;
+  };
+
+  // Обработка горячих клавиш (Пробел)
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isOpen) return;
+      if (e.code === 'Space') {
+        e.preventDefault(); 
+        togglePlay();
+      }
+      if (e.code === 'Escape') onClose();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsLoading(true);
+      setProgress(0);
+    }
+  }, [isOpen, videoUrl]);
 
   if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-fade-in" 
-      onClick={() => {
-        setIsLoading(true);
-        onClose();
-      }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in" 
+      onClick={onClose}
     >
-      <button className="absolute top-8 right-8 text-white/30 hover:text-white transition-colors z-[110]">
+      <button className="absolute top-6 right-6 text-white/40 hover:text-white transition-all z-[110] hover:rotate-90">
         <X size={32} />
       </button>
       
       <div 
-        className="relative w-full max-w-[400px] aspect-[9/16] rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(92,107,255,0.2)] bg-[#0B0F19]"
+        className="relative h-full max-h-[90vh] aspect-[9/16] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-black"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Индикатор загрузки в стиле Glassmorphism */}
         {isLoading && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md">
-            <Loader2 className="text-[#5C6BFF] animate-spin mb-4" size={48} />
-            <span className="font-primary text-[10px] uppercase tracking-[0.2em] text-white/50">Загрузка шедевра...</span>
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B0F19]/80 backdrop-blur-md">
+            <Loader2 className="text-[#5C6BFF] animate-spin mb-4" size={40} />
           </div>
         )}
 
         <video 
-          key={videoUrl}
+          ref={videoRef}
           src={videoUrl} 
           poster={posterUrl}
-          className={`w-full h-full object-cover transition-all duration-700 ${isLoading ? 'scale-110 blur-xl' : 'scale-100 blur-0'}`}
-          controls
-          autoPlay
+          className="w-full h-full object-contain bg-black cursor-pointer"
           playsInline
-          onCanPlayThrough={() => setIsLoading(false)}
+          autoPlay
+          onClick={togglePlay} // Клик по видео ставит на паузу
+          onTimeUpdate={() => setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100)}
+          onCanPlayThrough={() => {
+            setIsLoading(false);
+            setIsPlaying(true);
+          }}
+          onEnded={() => setIsPlaying(false)}
         />
         
-        {/* Декоративный блик сверху (Liquid Glass эффект) */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/5 to-transparent"></div>
+        <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+          
+          <div className="pointer-events-auto space-y-4">
+            {/* Интерактивный прогресс-бар */}
+            <div 
+              ref={progressRef}
+              onClick={handleScrub}
+              className="group relative w-full h-1.5 bg-white/10 rounded-full cursor-pointer overflow-hidden transition-all hover:h-2"
+            >
+              <div 
+                className="absolute top-0 left-0 h-full bg-[#5C6BFF] shadow-[0_0_15px_rgba(92,107,255,0.6)]" 
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <button onClick={togglePlay} className="text-white hover:text-[#5C6BFF] transition-transform active:scale-90">
+                  {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    videoRef.current.muted = !isMuted;
+                    setIsMuted(!isMuted);
+                  }} 
+                  className="text-white/70 hover:text-white transition-colors"
+                >
+                  {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
+                </button>
+              </div>
+
+              <button 
+                onClick={() => {
+                  videoRef.current.currentTime = 0;
+                  videoRef.current.play();
+                }}
+                className="text-white/40 hover:text-white transition-colors"
+              >
+                <RotateCcw size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
