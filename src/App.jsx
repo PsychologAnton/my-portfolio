@@ -82,32 +82,52 @@ const MeshBackground = () => (
   </div>
 );
 
-const VideoModal = ({ isOpen, videoUrl, onClose }) => {
+const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
+  const [isLoading, setIsLoading] = React.useState(true);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-fade-in" onClick={onClose}>
-      <button className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors">
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-fade-in" 
+      onClick={() => {
+        setIsLoading(true);
+        onClose();
+      }}
+    >
+      <button className="absolute top-8 right-8 text-white/30 hover:text-white transition-colors z-[110]">
         <X size={32} />
       </button>
       
       <div 
-        className="relative w-full max-w-[420px] aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(92,107,255,0.3)] bg-black"
+        className="relative w-full max-w-[400px] aspect-[9/16] rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(92,107,255,0.2)] bg-[#0B0F19]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Индикатор загрузки в стиле Glassmorphism */}
+        {isLoading && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md">
+            <Loader2 className="text-[#5C6BFF] animate-spin mb-4" size={48} />
+            <span className="font-primary text-[10px] uppercase tracking-[0.2em] text-white/50">Загрузка шедевра...</span>
+          </div>
+        )}
+
         <video 
+          key={videoUrl}
           src={videoUrl} 
-          className="w-full h-full object-cover"
+          poster={posterUrl}
+          className={`w-full h-full object-cover transition-all duration-700 ${isLoading ? 'scale-110 blur-xl' : 'scale-100 blur-0'}`}
           controls
           autoPlay
           playsInline
-          preload="metadata" // Загрузит только метаданные, чтобы знать размер
+          onCanPlayThrough={() => setIsLoading(false)}
         />
+        
+        {/* Декоративный блик сверху (Liquid Glass эффект) */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/5 to-transparent"></div>
       </div>
     </div>
   );
 };
-
 // ... (Navbar остается прежним)
 
 const Layout = ({ children, onOpenVideo }) => (
@@ -195,7 +215,7 @@ const ShowreelSection = ({ onPlay }) => (
 
 const PortfolioCard = ({ work, onPlay }) => (
   <div 
-    onClick={() => onPlay(work.videoUrl)}
+    onClick={() => onPlay(work.videoUrl, work.thumbnailUrl)}
     className="group relative rounded-3xl overflow-hidden bg-[#111827]/60 backdrop-blur-xl border border-white/10 aspect-[9/16] cursor-pointer"
   >
     <img 
@@ -295,16 +315,16 @@ const Navbar = () => {
 // ГЛАВНЫЙ КОМПОНЕНТ
 // ==========================================
 export default function App() {
-  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [modalData, setModalData] = useState({ url: null, poster: null });
 
   return (
     <Layout>
       <HeroSection />
       
       {/* Шоурил сразу под главным блоком */}
-      <ShowreelSection onPlay={(url) => setSelectedVideo(url)} />
+      <ShowreelSection onPlay={(url) => setModalData({ url, poster: './content/10.png' })} />
       
-      <PortfolioSection onPlay={(url) => setSelectedVideo(url)} />
+      <PortfolioSection onPlay={(url, poster) => setModalData({ url, poster })} />
       
       {/* Остальные секции */}
       <WorkflowSection />
@@ -319,9 +339,10 @@ export default function App() {
 
       {/* Модальное окно для всех видео */}
       <VideoModal 
-        isOpen={!!selectedVideo} 
-        videoUrl={selectedVideo} 
-        onClose={() => setSelectedVideo(null)} 
+        isOpen={!!modalData.url} 
+        videoUrl={modalData.url} 
+        posterUrl={modalData.poster}
+        onClose={() => setModalData({ url: null, poster: null })} 
       />
     </Layout>
   );
