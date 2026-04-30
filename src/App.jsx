@@ -1,6 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle, MessageSquare, FileText, FileCheck, CreditCard, Pause, VolumeX, Maximize, RotateCcw, Sun, Moon, MessageCircle, Mail, Send } from 'lucide-react';
-// ==========================================
+import { HashRouter as Router, Routes, Route, useParams, Link } from 'react-router-dom';
+import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle, MessageSquare, FileText, FileCheck, CreditCard, Pause, VolumeX, Maximize, RotateCcw, Sun, Moon, MessageCircle, Mail, Send, Camera } from 'lucide-react';
+const portfolioData = [
+  { id: "portfolio1", title: "Showreel 2026", category: "Showreel", videoUrl: "./content/10.mp4", thumbnailUrl: "./content/10.webp", description: "Демонстрация лучших работ и монтажных решений за последний год. Квинтэссенция стиля и технических возможностей.", features: ["Best Works", "Fast Cut", "VFX"] },
+  { id: "portfolio2", title: "Интервью Сергея Минаева", category: "Interview", videoUrl: "./content/1.mp4", thumbnailUrl: "./content/1.webp", description: "Динамичный многокамерный монтаж интервью Сергея Минаева с профессиональной очисткой звука и субтитрами.", features: ["Multi-cam Edit", "Dynamic Subs", "Audio Clean-up"] },
+  { id: "portfolio3", title: "ИИ-инфлюенсер стоматолог", category: "AI Content", videoUrl: "./content/2.mp4", thumbnailUrl: "./content/2.webp", description: "Создание виртуального ИИ-инфлюенсера с безупречным липсинком и генерацией окружения в HeyGen.", features: ["AI Avatar", "Lip Sync", "Virtual Studio"] },
+  { id: "portfolio4", title: "Сервис оплаты подписок", category: "Motion Design", videoUrl: "./content/3.mp4", thumbnailUrl: "./content/3.webp", description: "Технологичный моушн-дизайн IT-сервиса в стиле 3D Glassmorphism с детальной анимацией интерфейса.", features: ["3D Glassmorphism", "App UI Demo", "SFX"] },
+  { id: "portfolio5", title: "Кроссовки Puma", category: "Commercial", videoUrl: "./content/4.mp4", thumbnailUrl: "./content/4.webp", description: "Кинематографичная реклама PUMA с интеграцией CGI-ассетов и динамичной кинетической типографикой.", features: ["Kinetic Typography", "CGI Assets", "Color Grading"] },
+  { id: "portfolio6", title: "UGC Bombar", category: "Lifestyle", videoUrl: "./content/5.mp4", thumbnailUrl: "./content/5.webp", description: "Нативный UGC-ролик для Bombar со сверхдинамичным ритмом и трендовыми переходами.", features: ["Fast-paced Cut", "Trendy Transitions", "Natural Look"] },
+  { id: "portfolio7", title: "Коттедж Эльбрус", category: "Real Estate", videoUrl: "./content/6.mp4", thumbnailUrl: "./content/6.webp", description: "Атмосферный видео-обзор недвижимости у Эльбруса с кадрами с дрона.", features: ["Drone Footage", "Info-graphics", "Ambient Sound"] },
+  { id: "portfolio8", title: "Сериал Городок", category: "Entertainment", videoUrl: "./content/7.mp4", thumbnailUrl: "./content/7.webp", description: "Креативный эдит сериала «Городок» с ретро-эффектами и ИИ-реставрацией исходного качества.", features: ["Retro VFX", "Sound Design"] },
+  { id: "portfolio9", title: "Dodo Pizza Vlog", category: "Food / Promo", videoUrl: "./content/8.mp4", thumbnailUrl: "./content/8.webp", description: "Ритмичное фуд-промо для Dodo Pizza с использованием макро-съемки и элементов стоп-моушн.", features: ["Macro Shots", "Stop Motion", "Music Sync"] },
+  { id: "portfolio10", title: "Доставка цветов", category: "Product", videoUrl: "./content/9.mp4", thumbnailUrl: "./content/9.webp", description: "Эстетичная рекламная кампания доставки цветов, полностью созданная на базе нейросетей.", features: ["Full AI Ads", "Soft Lighting"] }
+];
+
 // 1. КОНФИГУРАЦИЯ И СТИЛИ
 // ==========================================
 const GlobalStyles = () => (
@@ -115,24 +128,22 @@ const MeshBackground = () => (
   </div>
 );
 
-const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
+// ==========================================
+// УНИВЕРСАЛЬНЫЙ КАСТОМНЫЙ ПЛЕЕР
+// ==========================================
+const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
   const videoRef = React.useRef(null);
   const progressRef = React.useRef(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [isMuted, setIsMuted] = React.useState(false);
-  
-  // НОВОЕ: Состояние видимости контроллеров
   const [showControls, setShowControls] = React.useState(false);
 
   const togglePlay = (e) => {
     if (e) e.stopPropagation();
     if (!videoRef.current) return;
-    
-    // При нажатии показываем управление
     setShowControls(true);
-    
     if (videoRef.current.paused) {
       videoRef.current.play();
       setIsPlaying(true);
@@ -142,7 +153,6 @@ const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
     }
   };
 
-  // Перемотка кликом по полоске
   const handleScrub = (e) => {
     e.stopPropagation();
     if (!videoRef.current || !progressRef.current) return;
@@ -151,116 +161,71 @@ const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
     videoRef.current.currentTime = scrubTime;
   };
 
-  // Обработка горячих клавиш (Пробел)
-  React.useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!isOpen) return;
-      if (e.code === 'Space') {
-        e.preventDefault(); 
-        togglePlay();
-      }
-      if (e.code === 'Escape') onClose();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
-
-  React.useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-      setProgress(0);
-    }
-  }, [isOpen, videoUrl]);
-
-  if (!isOpen) return null;
-
   return (
-  <div 
-    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 lg:backdrop-blur-xl animate-fade-in" 
-    onClick={onClose}
-  >
-      <button className="absolute top-6 right-6 text-white/40 hover:text-white transition-all z-[110] hover:rotate-90">
-        <X size={32} />
-      </button>
+    <div 
+      className="relative w-full h-full group"
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
+      {isLoading && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B0F19]/80 backdrop-blur-md">
+          <Loader2 className="text-[#5C6BFF] animate-spin" size={40} />
+        </div>
+      )}
+
+      <video 
+        ref={videoRef}
+        src={videoUrl} 
+        poster={posterUrl}
+        className="w-full h-full object-contain bg-black cursor-pointer"
+        playsInline
+        autoPlay={autoPlay}
+        onClick={togglePlay}
+        onTimeUpdate={() => setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100)}
+        onCanPlayThrough={() => {
+          setIsLoading(false);
+          if (autoPlay) setIsPlaying(true);
+        }}
+        onEnded={() => setIsPlaying(false)}
+      />
       
-      <div 
-        className="relative h-full max-h-[90vh] aspect-[9/16] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-black group"
-        onClick={(e) => e.stopPropagation()}
-        onMouseEnter={() => setShowControls(true)}
-        onMouseLeave={() => setShowControls(false)}
-      >
-        {isLoading && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B0F19]/80 backdrop-blur-md">
-            <Loader2 className="text-[#5C6BFF] animate-spin mb-4" size={40} />
+      <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/90 via-transparent to-transparent transition-all duration-500 ${(showControls && !isLoading) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className="pointer-events-auto space-y-4">
+          <div ref={progressRef} onClick={handleScrub} className="group relative w-full h-1.5 bg-white/10 rounded-full cursor-pointer overflow-hidden transition-all hover:h-2">
+            <div className="absolute top-0 left-0 h-full bg-[#5C6BFF] shadow-[0_0_15px_rgba(92,107,255,0.6)]" style={{ width: `${progress}%` }} />
           </div>
-        )}
 
-        <video 
-          ref={videoRef}
-          src={videoUrl} 
-          poster={posterUrl}
-          className="w-full h-full object-contain bg-black cursor-pointer"
-          playsInline
-          autoPlay
-          onClick={togglePlay} // Клик по видео ставит на паузу
-          onTimeUpdate={() => setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100)}
-          onCanPlayThrough={() => {
-            setIsLoading(false);
-            setIsPlaying(true);
-          }}
-          onEnded={() => setIsPlaying(false)}
-        />
-        
-{/* Панель теперь зависит от showControls и isLoading */}
-        <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/90 via-transparent to-transparent transition-all duration-500 ${(showControls && !isLoading) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div className="pointer-events-auto space-y-4">
-            {/* Интерактивный прогресс-бар */}
-            <div 
-              ref={progressRef}
-              onClick={handleScrub}
-              className="group relative w-full h-1.5 bg-white/10 rounded-full cursor-pointer overflow-hidden transition-all hover:h-2"
-            >
-              <div 
-                className="absolute top-0 left-0 h-full bg-[#5C6BFF] shadow-[0_0_15px_rgba(92,107,255,0.6)]" 
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-5">
-                <button onClick={togglePlay} className="text-white hover:text-[#5C6BFF] transition-transform active:scale-90">
-                  {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
-                </button>
-                
-                <button 
-                  onClick={() => {
-                    videoRef.current.muted = !isMuted;
-                    setIsMuted(!isMuted);
-                  }} 
-                  className="text-white/70 hover:text-white transition-colors"
-                >
-                  {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
-                </button>
-              </div>
-
-              <button 
-                onClick={() => {
-                  videoRef.current.currentTime = 0;
-                  videoRef.current.play();
-                }}
-                className="text-white/40 hover:text-white transition-colors"
-              >
-                <RotateCcw size={18} />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <button onClick={togglePlay} className="text-white hover:text-[#5C6BFF] transition-transform active:scale-90">
+                {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
+              </button>
+              <button onClick={() => { videoRef.current.muted = !isMuted; setIsMuted(!isMuted); }} className="text-white/70 hover:text-white transition-colors">
+                {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
               </button>
             </div>
+            <button onClick={() => { videoRef.current.currentTime = 0; videoRef.current.play(); }} className="text-white/40 hover:text-white transition-colors">
+              <RotateCcw size={18} />
+            </button>
           </div>
         </div>
       </div>
     </div>
   );
 };
-// ... (Navbar остается прежним)
+
+// Обновленная модалка, которая просто использует наш CustomPlayer
+const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 lg:backdrop-blur-xl animate-fade-in" onClick={onClose}>
+      <button className="absolute top-6 right-6 text-white/40 hover:text-white transition-all z-[110] hover:rotate-90"><X size={32} /></button>
+      <div className="relative h-full max-h-[90vh] aspect-[9/16] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-black" onClick={(e) => e.stopPropagation()}>
+        <CustomPlayer videoUrl={videoUrl} posterUrl={posterUrl} autoPlay={true} />
+      </div>
+    </div>
+  );
+};
 
 const Layout = ({ children, theme, onToggleTheme }) => (
   <div className="relative min-h-screen font-secondary selection:bg-[#5C6BFF]/30 transition-colors duration-400 overflow-x-hidden w-full">
@@ -459,19 +424,19 @@ const Navbar = ({ theme, onToggleTheme }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Главная', href: '#home' },
-    { name: 'Showreel', href: '#showreel' },
-    { name: 'Портфолио', href: '#portfolio' },
-    { name: 'Обо мне', href: '#about' },
-    { name: 'Инструменты', href: '#tools' },
-    { name: 'Процесс', href: '#workflow' },
-    { name: 'Прайс', href: '#pricing' },
-  ];
+      { name: 'Главная', href: '/#home' },
+      { name: 'Showreel', href: '/#showreel' },
+      { name: 'Портфолио', href: '/#portfolio' },
+      { name: 'Обо мне', href: '/#about' },
+      { name: 'Инструменты', href: '/#tools' },
+      { name: 'Процесс', href: '/#workflow' },
+      { name: 'Прайс', href: '/#pricing' },
+    ];
 
   return (
     <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
       <div className="bg-card-custom backdrop-blur-xl border border-[var(--border-color)] rounded-full px-6 py-4 flex items-center justify-between w-full max-w-6xl shadow-2xl transition-all duration-300"> 
-        <a href="#home" className="font-primary text-xl text-main-custom tracking-tight hover:text-[#5C6BFF] transition-colors uppercase">
+        <a href="/#home" className="font-primary text-xl text-main-custom tracking-tight hover:text-[#5C6BFF] transition-colors uppercase">
           REELZ<span className="text-[#5C6BFF]">4BIZ</span>
         </a>
 
@@ -503,7 +468,7 @@ const Navbar = ({ theme, onToggleTheme }) => {
 
           {/* ЗАМЕНЕНО: md:block на lg:block */}
           <a 
-            href="#contact" 
+            href="/#contact" 
             className="hidden lg:block font-secondary text-sm font-semibold bg-[#5C6BFF] text-white px-6 py-2.5 rounded-full hover:bg-[#5C6BFF]/80 transition-all active:scale-95"
           >
             Связаться
@@ -535,7 +500,7 @@ const Navbar = ({ theme, onToggleTheme }) => {
           </div>
           <div className="h-px bg-[var(--border-color)] w-full my-2"></div>
           <a 
-            href="#contact" 
+            href="/#contact" 
             onClick={() => setIsOpen(false)}
             className="w-full text-center font-secondary font-bold bg-[#5C6BFF] text-white py-4 rounded-2xl uppercase tracking-widest"
           >
@@ -547,6 +512,58 @@ const Navbar = ({ theme, onToggleTheme }) => {
   );
 };
 // ==========================================
+// СТРАНИЦА ОТДЕЛЬНОГО ПРОЕКТА
+// ==========================================
+const PortfolioDetailPage = ({ theme, onToggleTheme }) => {
+  const { id } = useParams();
+  const work = portfolioData.find(p => p.id === id);
+
+  if (!work) return <Layout theme={theme} onToggleTheme={onToggleTheme}><div className="text-white text-center py-32 font-primary text-3xl">Проект не найден</div></Layout>;
+
+  return (
+    <Layout theme={theme} onToggleTheme={onToggleTheme}>
+      <div className="mt-10 lg:mt-20 flex flex-col lg:flex-row gap-12 items-center lg:items-start min-h-[70vh]">
+        <div className="w-full lg:w-2/3">
+          <div className="relative aspect-[9/16] max-h-[80vh] mx-auto rounded-[2.5rem] overflow-hidden border border-[var(--border-color)] bg-black shadow-2xl">
+          {/* Передаем autoPlay={false} чтобы видео не запускалось само при загрузке страницы */}
+          <CustomPlayer 
+            videoUrl={`.${work.videoUrl}`} 
+            posterUrl={`.${work.thumbnailUrl}`} 
+            autoPlay={false} 
+          />
+        </div>
+        </div>
+        <div className="w-full lg:w-1/3 space-y-8 animate-fade-in">
+          <div>
+            <p className="font-secondary text-[#5C6BFF] text-xs font-bold uppercase tracking-[0.3em] mb-4">{work.category}</p>
+            <h1 className="font-primary text-3xl md:text-5xl text-main-custom leading-tight uppercase mb-6">{work.title}</h1>
+            <div className="w-20 h-1 bg-[#5C6BFF] rounded-full mb-8"></div>
+          </div>
+          <div className="bg-card-custom backdrop-blur-xl border border-[var(--border-color)] p-8 rounded-[2rem] shadow-xl">
+            <p className="font-secondary text-lg text-muted-custom leading-relaxed italic">«{work.description}»</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {work.features.map((f, i) => (
+              <span key={i} className="px-4 py-2 bg-white/5 border border-[var(--border-color)] rounded-full text-[10px] text-white/50 uppercase tracking-widest">
+                {f}
+              </span>
+            ))}
+          </div>
+          <div className="pt-8">
+            <Link to="/#portfolio" className="inline-flex items-center gap-3 text-main-custom hover:text-[#5C6BFF] transition-colors font-secondary text-sm font-bold uppercase tracking-widest group">
+              <div className="w-10 h-10 rounded-full border border-[var(--border-color)] flex items-center justify-center group-hover:border-[#5C6BFF] transition-all">
+                <ChevronRight className="rotate-180" size={18} />
+              </div>
+              Вернуться на главную
+            </Link>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+// ==========================================
 // ГЛАВНЫЙ КОМПОНЕНТ
 // ==========================================
 export default function App() {
@@ -554,10 +571,8 @@ export default function App() {
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
-    // 1. Проверяем сохраненную тему или системные настройки
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
     const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
     setTheme(initialTheme);
     document.documentElement.setAttribute('data-theme', initialTheme);
@@ -571,66 +586,52 @@ export default function App() {
   };
 
   return (
-    <Layout theme={theme} onToggleTheme={toggleTheme}>
-      <HeroSection />
-      
-      {/* Шоурил сразу под главным блоком */}
-      <ShowreelSection onPlay={(url) => setModalData({ url, poster: './content/10.webp' })} />
-      
-      <PortfolioSection onPlay={(url, poster) => setModalData({ url, poster })} />
-      <AboutSection /> 
-      <ToolsSection />
-      <WorkflowSection />
-      <PricingSection />
-      
-    <section id="contact" className="mt-12 bg-card-custom backdrop-blur-2xl border border-[var(--border-color)] rounded-[3rem] p-16 text-center relative overflow-hidden shadow-xl transition-all duration-300">
-      {/* Декоративный эффект свечения на фоне */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#5C6BFF]/10 blur-[120px] pointer-events-none"></div>
-      
-      <h2 className="font-primary text-5xl md:text-7xl text-white mb-8 uppercase relative z-10 tracking-tight drop-shadow-md">Начнем работу?</h2>
-      
-    <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 flex-wrap">
-      {/* Telegram */}
-      <a 
-        href="https://t.me/reelz4biz" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="group flex items-center gap-3 bg-[#0088CC] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center"
-      >
-        <Send size={18} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-        Telegram
-      </a>
+    <Router>
+      <Routes>
+        {/* ГЛАВНАЯ СТРАНИЦА (Старый контент) */}
+        <Route path="/" element={
+          <Layout theme={theme} onToggleTheme={toggleTheme}>
+            <HeroSection />
+            <ShowreelSection onPlay={(url) => setModalData({ url, poster: './content/10.webp' })} />
+            <PortfolioSection onPlay={(url, poster) => setModalData({ url, poster })} />
+            <AboutSection /> 
+            <ToolsSection />
+            <WorkflowSection />
+            <PricingSection />
+            
+            <section id="contact" className="mt-12 bg-card-custom backdrop-blur-2xl border border-[var(--border-color)] rounded-[3rem] p-16 text-center relative overflow-hidden shadow-xl transition-all duration-300">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#5C6BFF]/10 blur-[120px] pointer-events-none"></div>
+              <h2 className="font-primary text-5xl md:text-7xl text-white mb-8 uppercase relative z-10 tracking-tight drop-shadow-md">Начнем работу?</h2>
+              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 flex-wrap">
+                <a href="https://t.me/reelz4biz" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 bg-[#0088CC] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center">
+                  <Send size={18} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /> Telegram
+                </a>
+                <a href="https://wa.me/79815871462" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 bg-[#25D366] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center">
+                  <MessageCircle size={20} fill="currentColor" className="text-white" /> WhatsApp
+                </a>
+                <a 
+                  href="https://www.instagram.com/reelz4biz" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F56040] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center"
+                >
+                  <Camera size={20} className="text-white" />
+                  Instagram
+                </a>
+                <a href="mailto:drantonch@yandex.ru" className="group flex items-center gap-3 bg-[#1F2937]/90 backdrop-blur-xl border border-white/10 text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:bg-[#374151] hover:scale-105 transition-all active:scale-95 w-full md:w-auto justify-center shadow-lg">
+                  <Mail size={18} className="text-white" /> <span>Почта</span>
+                </a>
+              </div>
+            </section>
 
-      {/* WhatsApp */}
-      <a 
-        href="https://wa.me/79815871462" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="group flex items-center gap-3 bg-[#25D366] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center"
-      >
-        <MessageCircle size={20} fill="currentColor" className="text-white" />
-        WhatsApp
-      </a>
+            <VideoModal isOpen={!!modalData.url} videoUrl={modalData.url} posterUrl={modalData.poster} onClose={() => setModalData({ url: null, poster: null })} />
+          </Layout>
+        } />
 
-      {/* Email */}
-      <a 
-        href="mailto:drantonch@yandex.ru" 
-        className="group flex items-center gap-3 bg-[#1F2937]/90 backdrop-blur-xl border border-white/10 text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:bg-[#374151] hover:scale-105 transition-all active:scale-95 w-full md:w-auto justify-center shadow-lg"
-      >
-        <Mail size={18} className="text-white" />
-        <span>Почта</span>
-      </a>
-    </div>
-    </section>
-
-      {/* Модальное окно для всех видео */}
-      <VideoModal 
-        isOpen={!!modalData.url} 
-        videoUrl={modalData.url} 
-        posterUrl={modalData.poster}
-        onClose={() => setModalData({ url: null, poster: null })} 
-      />
-    </Layout>
+        {/* НОВЫЕ ОТДЕЛЬНЫЕ СТРАНИЦЫ */}
+        <Route path="/:id" element={<PortfolioDetailPage theme={theme} onToggleTheme={toggleTheme} />} />
+      </Routes>
+    </Router>
   );
 }
 
@@ -787,7 +788,7 @@ const ToolsSection = () => {
       </ul>
       {/* Теперь это ссылка, ведущая на блок #contact */}
       <a 
-        href="#contact" 
+        href="/#contact" 
         className={`w-full py-5 rounded-2xl font-secondary font-bold text-sm uppercase tracking-widest transition-all text-center block ${isPopular ? 'bg-[#5C6BFF] text-white hover:bg-[#5C6BFF]/80 shadow-lg' : 'bg-[#5C6BFF]/10 text-main-custom hover:bg-[#5C6BFF]/20 border border-[#5C6BFF]/20'}`}
       >
         Заказать
