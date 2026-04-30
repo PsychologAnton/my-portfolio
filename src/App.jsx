@@ -134,24 +134,47 @@ const MeshBackground = () => (
 const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
   const videoRef = React.useRef(null);
   const progressRef = React.useRef(null);
-  // Изначально ставим false, чтобы не блокировать интерфейс, 
-  // если видео подгружается быстро
+  
+  // Устанавливаем начальное состояние загрузки
   const [isLoading, setIsLoading] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [isMuted, setIsMuted] = React.useState(autoPlay); 
   const [showControls, setShowControls] = React.useState(true);
 
+  // Дополнительная проверка для Safari: если видео уже в кэше, 
+  // события загрузки могут не сработать повторно.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleCheckReady = () => {
+      // readyState 3 (HAVE_FUTURE_DATA) или 4 (HAVE_ENOUGH_DATA) 
+      // означают, что видео готово к воспроизведению
+      if (video.readyState >= 3) {
+        setIsLoading(false);
+      }
+    };
+
+    handleCheckReady();
+    
+    // Добавляем слушатель на случай, если состояние изменится
+    video.addEventListener('loadedmetadata', handleCheckReady);
+    return () => video.removeEventListener('loadedmetadata', handleCheckReady);
+  }, [videoUrl]);
+
   const togglePlay = (e) => {
     if (e) e.stopPropagation();
     if (!videoRef.current) return;
     
     if (videoRef.current.paused) {
-      // Safari требует обработки Promise для метода play()
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
         playPromise
-          .then(() => setIsPlaying(true))
+          .then(() => {
+            setIsPlaying(true);
+            setIsLoading(false); // На случай, если лоадер застрял
+          })
           .catch(error => console.log("Playback prevented:", error));
       }
     } else {
@@ -167,15 +190,16 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
       onMouseLeave={() => isPlaying && setShowControls(false)}
       onClick={togglePlay}
     >
-      {/* Лоадер: показываем только когда реально идет загрузка */}
+      {/* Лоадер: показываем только когда идет реальное ожидание (onWaiting) */}
       {isLoading && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <Loader2 className="text-[#5C6BFF] animate-spin" size={40} />
         </div>
       )}
 
-      {/* Кнопка Play по центру: если видео на паузе, пользователь должен видеть, что это плеер */}
-      {!isPlaying && !isLoading && (
+      {/* Кнопка Play по центру: 
+          УБРАНО условие !isLoading, чтобы кнопка была видна, даже если Safari "тупит" с лоадером */}
+      {!isPlaying && (
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
           <div className="w-20 h-20 rounded-full bg-[#5C6BFF]/90 flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
             <Play size={32} className="text-white fill-white ml-1" />
@@ -188,7 +212,6 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
         src={videoUrl} 
         poster={posterUrl}
         className="w-full h-full object-contain cursor-pointer"
-        /* Важные атрибуты для iPhone и Safari */
         playsInline
         webkit-playsinline="true"
         preload="metadata"
@@ -199,14 +222,16 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
             setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
           }
         }}
-        // Используем более "легкие" события для снятия лоадера
+        // Оптимизированные события для управления лоадером
         onLoadedData={() => setIsLoading(false)}
         onCanPlay={() => setIsLoading(false)}
+        onCanPlayThrough={() => setIsLoading(false)}
         onWaiting={() => setIsLoading(true)}
         onPlaying={() => {
           setIsLoading(false);
           setIsPlaying(true);
         }}
+        onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
       />
       
@@ -234,8 +259,10 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
               <button 
                 onClick={(e) => { 
                   e.stopPropagation();
-                  videoRef.current.muted = !isMuted; 
-                  setIsMuted(!isMuted); 
+                  if (videoRef.current) {
+                    videoRef.current.muted = !isMuted; 
+                    setIsMuted(!isMuted);
+                  }
                 }} 
                 className="text-white/70 hover:text-white"
               >
