@@ -138,20 +138,17 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
-  // ФИКС ЗВУКА: по умолчанию звук включен (false для muted)
+  // Фикс звука: по умолчанию звук включен (false для muted)
   const [isMuted, setIsMuted] = React.useState(false); 
   const [showControls, setShowControls] = React.useState(true);
 
-  // Обработка автоплея со звуком для Safari
+  // Обработка автоплея со звуком для Safari (сохраняем)
   useEffect(() => {
     if (autoPlay && videoRef.current) {
-      // Пытаемся воспроизвести со звуком
       const playPromise = videoRef.current.play();
       
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          // Если браузер заблокировал автоплей со звуком, 
-          // включаем mute и пробуем снова (стандарт для Safari)
           setIsMuted(true);
           if (videoRef.current) {
             videoRef.current.muted = true;
@@ -183,7 +180,7 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
       onMouseLeave={() => isPlaying && setShowControls(false)}
       onClick={togglePlay}
     >
-      {/* ФИКС СЛОЕВ: Кнопка Play теперь имеет z-40, чтобы быть выше лоадера (z-30) */}
+      {/* Кнопка Play по центру (z-40, сохраняем видимость поверх лоадера) */}
       {!isPlaying && (
         <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
           <div className="w-20 h-20 rounded-full bg-[#5C6BFF]/90 flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
@@ -192,9 +189,10 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
         </div>
       )}
 
-      {/* Лоадер (z-30) теперь не будет блюрить кнопку, так как она выше него */}
+      {/* ФИКС: Убрали backdrop-blur-sm, немного затемнили фон под спиннером */}
       {isLoading && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        // Изменили bg-black/40 на bg-black/60 для контраста, убрали заблюривание превью
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60">
           <Loader2 className="text-[#5C6BFF] animate-spin" size={40} />
         </div>
       )}
@@ -202,12 +200,12 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
       <video 
         ref={videoRef}
         src={videoUrl} 
-        poster={posterUrl}
+        poster={posterUrl} // Превью теперь будет четким
         className="w-full h-full object-contain cursor-pointer"
         playsInline
         webkit-playsinline="true"
         preload="metadata"
-        muted={isMuted} // Управляется состоянием
+        muted={isMuted}
         onTimeUpdate={() => {
           if (videoRef.current) {
             setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
@@ -247,9 +245,11 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
               <button 
                 onClick={(e) => { 
                   e.stopPropagation();
-                  const newMuted = !isMuted;
-                  videoRef.current.muted = newMuted; 
-                  setIsMuted(newMuted); 
+                  if (videoRef.current) {
+                    const newMuted = !isMuted;
+                    videoRef.current.muted = newMuted; 
+                    setIsMuted(newMuted);
+                  }
                 }} 
                 className="text-white/70 hover:text-white"
               >
