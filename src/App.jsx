@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { HashRouter as Router, Routes, Route, useParams, Link } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useParams, Link, useLocation } from 'react-router-dom';
 import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle, MessageSquare, FileText, FileCheck, CreditCard, Pause, VolumeX, Maximize, RotateCcw, Sun, Moon, MessageCircle, Mail, Send, Camera } from 'lucide-react';
 const portfolioData = [
   { id: "portfolio1", title: "Showreel 2026", category: "Showreel", videoUrl: "./content/10.mp4", thumbnailUrl: "./content/10.webp", description: "Демонстрация лучших работ и монтажных решений за последний год. Квинтэссенция стиля и технических возможностей.", features: ["Best Works", "Fast Cut", "VFX"] },
@@ -134,20 +134,25 @@ const MeshBackground = () => (
 const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
   const videoRef = React.useRef(null);
   const progressRef = React.useRef(null);
+  // Изначально ставим false, чтобы не блокировать интерфейс, 
+  // если видео подгружается быстро
   const [isLoading, setIsLoading] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
-  const [isMuted, setIsMuted] = React.useState(autoPlay); // Автоплей требует mute
-  const [showControls, setShowControls] = React.useState(true); // Всегда показываем на старте
+  const [isMuted, setIsMuted] = React.useState(autoPlay); 
+  const [showControls, setShowControls] = React.useState(true);
 
   const togglePlay = (e) => {
     if (e) e.stopPropagation();
     if (!videoRef.current) return;
     
     if (videoRef.current.paused) {
+      // Safari требует обработки Promise для метода play()
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
-        playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch(error => console.log("Playback prevented:", error));
       }
     } else {
       videoRef.current.pause();
@@ -162,17 +167,17 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
       onMouseLeave={() => isPlaying && setShowControls(false)}
       onClick={togglePlay}
     >
-      {/* ИНДИКАТОР ЗАГРУЗКИ */}
+      {/* Лоадер: показываем только когда реально идет загрузка */}
       {isLoading && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <Loader2 className="text-[#5C6BFF] animate-spin" size={48} />
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <Loader2 className="text-[#5C6BFF] animate-spin" size={40} />
         </div>
       )}
 
-      {/* ЦЕНТРАЛЬНАЯ КНОПКА PLAY (для мобилок) */}
+      {/* Кнопка Play по центру: если видео на паузе, пользователь должен видеть, что это плеер */}
       {!isPlaying && !isLoading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20">
-          <div className="w-20 h-20 rounded-full bg-[#5C6BFF] flex items-center justify-center shadow-2xl animate-pulse">
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="w-20 h-20 rounded-full bg-[#5C6BFF]/90 flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
             <Play size={32} className="text-white fill-white ml-1" />
           </div>
         </div>
@@ -183,26 +188,30 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
         src={videoUrl} 
         poster={posterUrl}
         className="w-full h-full object-contain cursor-pointer"
+        /* Важные атрибуты для iPhone и Safari */
         playsInline
         webkit-playsinline="true"
         preload="metadata"
         muted={isMuted}
         autoPlay={autoPlay}
-        onTimeUpdate={() => setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100)}
+        onTimeUpdate={() => {
+          if (videoRef.current) {
+            setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
+          }
+        }}
+        // Используем более "легкие" события для снятия лоадера
+        onLoadedData={() => setIsLoading(false)}
+        onCanPlay={() => setIsLoading(false)}
         onWaiting={() => setIsLoading(true)}
         onPlaying={() => {
           setIsLoading(false);
           setIsPlaying(true);
         }}
-        onCanPlay={() => setIsLoading(false)}
-        onEnded={() => {
-          setIsPlaying(false);
-          setShowControls(true);
-        }}
+        onEnded={() => setIsPlaying(false)}
       />
       
-      {/* КОНТРОЛЛЕРЫ */}
-      <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 via-transparent transition-opacity duration-300 ${(showControls || !isPlaying) ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Контроллеры */}
+      <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${(showControls || !isPlaying) ? 'opacity-100' : 'opacity-0'}`}>
         <div className="pointer-events-auto space-y-4">
           <div 
             ref={progressRef} 
@@ -211,7 +220,7 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
               const rect = progressRef.current.getBoundingClientRect();
               const scrubTime = ((e.clientX - rect.left) / rect.width) * videoRef.current.duration;
               videoRef.current.currentTime = scrubTime;
-            }} 
+            }}
             className="group relative w-full h-1.5 bg-white/20 rounded-full cursor-pointer hover:h-2 transition-all"
           >
             <div className="absolute top-0 left-0 h-full bg-[#5C6BFF]" style={{ width: `${progress}%` }} />
@@ -219,14 +228,17 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
-              <button onClick={togglePlay} className="text-white">
+              <button onClick={togglePlay} className="text-white hover:text-[#5C6BFF] transition-colors">
                 {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
               </button>
-              <button onClick={(e) => { 
-                e.stopPropagation();
-                videoRef.current.muted = !isMuted; 
-                setIsMuted(!isMuted); 
-              }} className="text-white/80">
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  videoRef.current.muted = !isMuted; 
+                  setIsMuted(!isMuted); 
+                }} 
+                className="text-white/70 hover:text-white"
+              >
                 {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
               </button>
             </div>
@@ -236,7 +248,6 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
     </div>
   );
 };
-
 // Обновленная модалка, которая просто использует наш CustomPlayer
 const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
   if (!isOpen) return null;
@@ -455,14 +466,14 @@ const Navbar = ({ theme, onToggleTheme }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-      { name: 'Главная', href: '/#home' },
-      { name: 'Showreel', href: '/#showreel' },
-      { name: 'Портфолио', href: '/#portfolio' },
-      { name: 'Обо мне', href: '/#about' },
-      { name: 'Инструменты', href: '/#tools' },
-      { name: 'Процесс', href: '/#workflow' },
-      { name: 'Прайс', href: '/#pricing' },
-    ];
+    { name: 'Главная', href: '#/' }, // Путь к корню
+    { name: 'Showreel', href: '#/showreel' },
+    { name: 'Портфолио', href: '#/portfolio' },
+    { name: 'Обо мне', href: '#/about' },
+    { name: 'Инструменты', href: '#/tools' },
+    { name: 'Процесс', href: '#/workflow' },
+    { name: 'Прайс', href: '#/pricing' },
+  ];
 
   return (
     <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
@@ -593,7 +604,28 @@ const PortfolioDetailPage = ({ theme, onToggleTheme }) => {
     </Layout>
   );
 };
+const ScrollHandler = () => {
+  // Теперь вызываем импортированный хук напрямую
+  const { pathname } = useLocation();
 
+  React.useEffect(() => {
+    // Убираем слеш из пути, чтобы получить чистый ID (например, "showreel")
+    const id = pathname.replace('/', '');
+    if (id) {
+      const element = document.getElementById(id);
+      if (element) {
+        // Небольшая задержка, чтобы страница успела отрисоваться
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [pathname]);
+
+  return null;
+};
 // ==========================================
 // ГЛАВНЫЙ КОМПОНЕНТ
 // ==========================================
@@ -618,50 +650,45 @@ export default function App() {
 
   return (
     <Router>
-      <Routes>
-        {/* ГЛАВНАЯ СТРАНИЦА (Старый контент) */}
-        <Route path="/" element={
-          <Layout theme={theme} onToggleTheme={toggleTheme}>
-            <HeroSection />
-            <ShowreelSection onPlay={(url) => setModalData({ url, poster: './content/10.webp' })} />
-            <PortfolioSection onPlay={(url, poster) => setModalData({ url, poster })} />
-            <AboutSection /> 
-            <ToolsSection />
-            <WorkflowSection />
-            <PricingSection />
-            
-            <section id="contact" className="mt-12 bg-card-custom backdrop-blur-2xl border border-[var(--border-color)] rounded-[3rem] p-16 text-center relative overflow-hidden shadow-xl transition-all duration-300">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#5C6BFF]/10 blur-[120px] pointer-events-none"></div>
-              <h2 className="font-primary text-5xl md:text-7xl text-white mb-8 uppercase relative z-10 tracking-tight drop-shadow-md">Начнем работу?</h2>
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 flex-wrap">
-                <a href="https://t.me/reelz4biz" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 bg-[#0088CC] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center">
-                  <Send size={18} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /> Telegram
-                </a>
-                <a href="https://wa.me/79815871462" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 bg-[#25D366] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center">
-                  <MessageCircle size={20} fill="currentColor" className="text-white" /> WhatsApp
-                </a>
-                <a 
-                  href="https://www.instagram.com/reelz4biz" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-3 bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F56040] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center"
-                >
-                  <Camera size={20} className="text-white" />
-                  Instagram
-                </a>
-                <a href="mailto:drantonch@yandex.ru" className="group flex items-center gap-3 bg-[#1F2937]/90 backdrop-blur-xl border border-white/10 text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:bg-[#374151] hover:scale-105 transition-all active:scale-95 w-full md:w-auto justify-center shadow-lg">
-                  <Mail size={18} className="text-white" /> <span>Почта</span>
-                </a>
-              </div>
-            </section>
+  <Routes>
+    {/* Страницы проектов с префиксом, чтобы не путались с якорями */}
+    <Route path="/project/:id" element={<PortfolioDetailPage theme={theme} onToggleTheme={toggleTheme} />} />
+    
+    {/* Все остальные пути (*) теперь ведут на главную страницу */}
+    <Route path="*" element={
+      <Layout theme={theme} onToggleTheme={toggleTheme}>
+        <ScrollHandler /> {/* Добавляем обработчик скролла */}
+        <HeroSection />
+        <ShowreelSection onPlay={(url) => setModalData({ url, poster: './content/10.webp' })} />
+        <PortfolioSection onPlay={(url, poster) => setModalData({ url, poster })} />
+        <AboutSection /> 
+        <ToolsSection />
+        <WorkflowSection />
+        <PricingSection />
+        
+        <section id="contact" className="mt-12 bg-card-custom backdrop-blur-2xl border border-[var(--border-color)] rounded-[3rem] p-16 text-center relative overflow-hidden shadow-xl transition-all duration-300">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#5C6BFF]/10 blur-[120px] pointer-events-none"></div>
+          <h2 className="font-primary text-5xl md:text-7xl text-white mb-8 uppercase relative z-10 tracking-tight drop-shadow-md">Начнем работу?</h2>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 flex-wrap">
+            <a href="https://t.me/reelz4biz" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 bg-[#0088CC] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center">
+              <Send size={18} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /> Telegram
+            </a>
+            <a href="https://wa.me/79815871462" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 bg-[#25D366] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center">
+              <MessageCircle size={20} fill="currentColor" className="text-white" /> WhatsApp
+            </a>
+            <a href="https://www.instagram.com/reelz4biz" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F56040] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center">
+              <Camera size={20} className="text-white" /> Instagram
+            </a>
+            <a href="mailto:drantonch@yandex.ru" className="group flex items-center gap-3 bg-[#1F2937]/90 backdrop-blur-xl border border-white/10 text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:bg-[#374151] hover:scale-105 transition-all active:scale-95 w-full md:w-auto justify-center shadow-lg">
+              <Mail size={18} className="text-white" /> <span>Почта</span>
+            </a>
+          </div>
+        </section>
 
-            <VideoModal isOpen={!!modalData.url} videoUrl={modalData.url} posterUrl={modalData.poster} onClose={() => setModalData({ url: null, poster: null })} />
-          </Layout>
-        } />
-
-        {/* НОВЫЕ ОТДЕЛЬНЫЕ СТРАНИЦЫ */}
-        <Route path="/:id" element={<PortfolioDetailPage theme={theme} onToggleTheme={toggleTheme} />} />
-      </Routes>
+        <VideoModal isOpen={!!modalData.url} videoUrl={modalData.url} posterUrl={modalData.poster} onClose={() => setModalData({ url: null, poster: null })} />
+      </Layout>
+    } />
+  </Routes>
     </Router>
   );
 }
