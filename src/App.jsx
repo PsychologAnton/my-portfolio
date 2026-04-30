@@ -131,134 +131,47 @@ const MeshBackground = () => (
 // ==========================================
 // УНИВЕРСАЛЬНЫЙ КАСТОМНЫЙ ПЛЕЕР
 // ==========================================
+import { Plyr } from "plyr-react"; 
+import "plyr/dist/plyr.css";
+
 const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
-  const videoRef = React.useRef(null);
-  const progressRef = React.useRef(null);
-  
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isPlaying, setIsPlaying] = React.useState(false);
-  const [progress, setProgress] = React.useState(0);
-  // Фикс звука: по умолчанию звук включен (false для muted)
-  const [isMuted, setIsMuted] = React.useState(false); 
-  const [showControls, setShowControls] = React.useState(true);
-
-  // Обработка автоплея со звуком для Safari (сохраняем)
-  useEffect(() => {
-    if (autoPlay && videoRef.current) {
-      const playPromise = videoRef.current.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          setIsMuted(true);
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            videoRef.current.play().catch(e => console.log("Autoplay failed", e));
-          }
-        });
-      }
-    }
-  }, [autoPlay, videoUrl]);
-
-  const togglePlay = (e) => {
-    if (e) e.stopPropagation();
-    if (!videoRef.current) return;
-    
-    if (videoRef.current.paused) {
-      videoRef.current.play()
-        .then(() => setIsPlaying(true))
-        .catch(error => console.log("Playback blocked:", error));
-    } else {
-      videoRef.current.pause();
-      setIsPlaying(false);
+  const plyrProps = {
+    source: {
+      type: 'video',
+      sources: [{ src: videoUrl, type: 'video/mp4' }],
+      poster: posterUrl,
+    },
+    options: {
+      autoplay: autoPlay,
+      muted: autoPlay, // Safari требует mute для автоплея
+      playsinline: true,
+      controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+      settings: ['quality', 'speed'],
+      // Тонкая настройка стиля под твой бренд
+      tooltips: { controls: true, seek: true },
     }
   };
 
   return (
-    <div 
-      className="relative w-full h-full group bg-black"
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
-      onClick={togglePlay}
-    >
-      {/* Кнопка Play по центру (z-40, сохраняем видимость поверх лоадера) */}
-      {!isPlaying && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
-          <div className="w-20 h-20 rounded-full bg-[#5C6BFF]/90 flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
-            <Play size={32} className="text-white fill-white ml-1" />
-          </div>
-        </div>
-      )}
-
-      {/* ФИКС: Убрали backdrop-blur-sm, немного затемнили фон под спиннером */}
-      {isLoading && (
-        // Изменили bg-black/40 на bg-black/60 для контраста, убрали заблюривание превью
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60">
-          <Loader2 className="text-[#5C6BFF] animate-spin" size={40} />
-        </div>
-      )}
-
-      <video 
-        ref={videoRef}
-        src={videoUrl} 
-        poster={posterUrl} // Превью теперь будет четким
-        className="w-full h-full object-contain cursor-pointer"
-        playsInline
-        webkit-playsinline="true"
-        preload="metadata"
-        muted={isMuted}
-        onTimeUpdate={() => {
-          if (videoRef.current) {
-            setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
-          }
-        }}
-        onLoadedData={() => setIsLoading(false)}
-        onWaiting={() => setIsLoading(true)}
-        onPlaying={() => {
-          setIsLoading(false);
-          setIsPlaying(true);
-        }}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-      />
-      
-      {/* Контроллеры (z-50) */}
-      <div className={`absolute inset-0 z-50 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${(showControls || !isPlaying) ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="pointer-events-auto space-y-4">
-          <div 
-            ref={progressRef} 
-            onClick={(e) => {
-              e.stopPropagation();
-              const rect = progressRef.current.getBoundingClientRect();
-              const scrubTime = ((e.clientX - rect.left) / rect.width) * videoRef.current.duration;
-              videoRef.current.currentTime = scrubTime;
-            }}
-            className="group relative w-full h-1.5 bg-white/20 rounded-full cursor-pointer hover:h-2 transition-all"
-          >
-            <div className="absolute top-0 left-0 h-full bg-[#5C6BFF]" style={{ width: `${progress}%` }} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-5">
-              <button onClick={togglePlay} className="text-white hover:text-[#5C6BFF] transition-colors">
-                {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
-              </button>
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation();
-                  if (videoRef.current) {
-                    const newMuted = !isMuted;
-                    videoRef.current.muted = newMuted; 
-                    setIsMuted(newMuted);
-                  }
-                }} 
-                className="text-white/70 hover:text-white"
-              >
-                {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="relative w-full h-full rounded-[2rem] overflow-hidden bg-black group shadow-2xl border border-white/10">
+      <style>{`
+        :root {
+          --plyr-color-main: #5C6BFF; /* Твой акцентный синий */
+          --plyr-video-control-background-hover: rgba(92, 107, 255, 0.2);
+          --plyr-range-fill-background: #5C6BFF;
+        }
+        .plyr--video {
+          border-radius: 1.5rem;
+          height: 100%;
+        }
+        .plyr__video-wrapper {
+          height: 100%;
+        }
+        .plyr__poster {
+          background-size: cover;
+        }
+      `}</style>
+      <Plyr {...plyrProps} />
     </div>
   );
 };
@@ -273,12 +186,12 @@ const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
       <button className="absolute top-6 right-6 text-white/60 hover:text-white z-[110]">
         <X size={32} />
       </button>
-      <div 
-        className="relative h-full max-h-[85vh] aspect-[9/16] rounded-[2rem] overflow-hidden border border-white/10 bg-black shadow-2xl" 
-        onClick={(e) => e.stopPropagation()}
-      >
-        <CustomPlayer videoUrl={videoUrl} posterUrl={posterUrl} autoPlay={true} />
-      </div>
+    <div 
+      className="relative w-full max-w-[400px] aspect-[9/16] rounded-[2.5rem] overflow-hidden border border-white/10 bg-black shadow-2xl" 
+      onClick={(e) => e.stopPropagation()}
+    >
+      <CustomPlayer videoUrl={videoUrl} posterUrl={posterUrl} autoPlay={true} />
+    </div>
     </div>
   );
 };
