@@ -50,26 +50,43 @@ const GlobalStyles = () => (
     .font-primary { font-family: 'Montserrat', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
     .font-secondary { font-family: 'Raleway', sans-serif; }
 
-    .mesh-gradient {
+  .mesh-gradient {
       background: 
         radial-gradient(circle at 15% 50%, var(--mesh-1) 0%, transparent 50%),
         radial-gradient(circle at 85% 30%, var(--mesh-2) 0%, transparent 50%),
         radial-gradient(circle at 50% 80%, var(--bg-body) 0%, transparent 50%);
       background-color: var(--bg-body);
       background-size: 200% 200%;
+      /* Добавляем ускорение GPU */
+      transform: translateZ(0);
+      will-change: background-position;
       animation: mesh-shift 15s ease-in-out infinite alternate;
     }
+      /* ОТКЛЮЧАЕМ ТЯЖЕЛУЮ АНИМАЦИЮ НА ПЛАНШЕТАХ И ТЕЛЕФОНАХ */
+    @media (max-width: 1024px) {
+      .mesh-gradient {
+        animation: none; 
+        background-size: 100% 100%;
+      }
+      /* Уменьшаем нагрузку от размытия */
+      .backdrop-blur-2xl {
+        backdrop-filter: blur(10px); /* Вместо 40px+ */
+      }
+      .backdrop-blur-md {
+        backdrop-filter: blur(4px);
+      }
+    }
+
+    @keyframes mesh-shift {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 100% 100%; }
+    }
+
 
     .bg-card-custom { background-color: var(--bg-card); border-color: var(--border-color); }
     .text-main-custom { color: var(--text-main); }
     .text-muted-custom { color: var(--text-muted); }
     .bg-accent-custom { background-color: var(--accent); }
-
-    @keyframes mesh-shift {
-      0% { background-position: 0% 0%; }
-      50% { background-position: 100% 100%; }
-      100% { background-position: 0% 100%; }
-    }
     
     .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
     @keyframes fadeIn {
@@ -79,15 +96,14 @@ const GlobalStyles = () => (
   `}} />
 );
 const AnimatedOrbs = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
-    <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-[#5C6BFF]/10 blur-[120px] animate-float delay-1"></div>
-    {/* Пурпурная сфера справа по центру */}
-    <div className="absolute top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#312E81]/20 blur-[130px] animate-float"></div>
-    
-    {/* Индиго сфера снизу слева */}
-    <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] rounded-full bg-[#1E1B4B]/30 blur-[100px] animate-float delay-2"></div>
+  /* Изменили md:block на lg:block — теперь на планшетах сферы скроются */
+  <div className="absolute inset-0 overflow-hidden pointer-events-none hidden lg:block">
+    <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-[#5C6BFF]/10 blur-[80px] animate-float delay-1"></div>
+    <div className="absolute top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#312E81]/20 blur-[90px] animate-float"></div>
+    <div className="absolute bottom-[-10%] left-[10%] w-[400px] h-[400px] rounded-full bg-[#1E1B4B]/30 blur-[70px] animate-float delay-2"></div>
   </div>
 );
+
 
 // ==========================================
 // 2. ГЛОБАЛЬНЫЕ КОМПОНЕНТЫ
@@ -161,10 +177,10 @@ const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in" 
-      onClick={onClose}
-    >
+  <div 
+    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 lg:backdrop-blur-xl animate-fade-in" 
+    onClick={onClose}
+  >
       <button className="absolute top-6 right-6 text-white/40 hover:text-white transition-all z-[110] hover:rotate-90">
         <X size={32} />
       </button>
@@ -281,7 +297,7 @@ const HeroSection = () => (
         alt="Background" 
       />
       {/* Слой высококачественного размытия (Backdrop Blur) */}
-      <div className="absolute inset-0 backdrop-blur-[6px] bg-black/20"></div>
+      <div className="absolute inset-0 backdrop-blur-[2px] lg:backdrop-blur-[6px] bg-black/30"></div>
     </div>
 
     {/* Плашка "Свободен" — теперь всегда в одном стиле */}
