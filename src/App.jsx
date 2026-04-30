@@ -137,39 +137,44 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
-  const [isMuted, setIsMuted] = React.useState(false);
-  const [showControls, setShowControls] = React.useState(false);
+  const [isMuted, setIsMuted] = React.useState(autoPlay); // Автоплей требует mute
+  const [showControls, setShowControls] = React.useState(true); // Всегда показываем на старте
 
   const togglePlay = (e) => {
     if (e) e.stopPropagation();
     if (!videoRef.current) return;
-    setShowControls(true);
+    
     if (videoRef.current.paused) {
-      videoRef.current.play();
-      setIsPlaying(true);
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      }
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
     }
   };
 
-  const handleScrub = (e) => {
-    e.stopPropagation();
-    if (!videoRef.current || !progressRef.current) return;
-    const rect = progressRef.current.getBoundingClientRect();
-    const scrubTime = ((e.clientX - rect.left) / rect.width) * videoRef.current.duration;
-    videoRef.current.currentTime = scrubTime;
-  };
-
   return (
     <div 
-      className="relative w-full h-full group"
+      className="relative w-full h-full group bg-black"
       onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
+      onMouseLeave={() => isPlaying && setShowControls(false)}
+      onClick={togglePlay}
     >
+      {/* ИНДИКАТОР ЗАГРУЗКИ */}
       {isLoading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B0F19]/80 backdrop-blur-md">
-          <Loader2 className="text-[#5C6BFF] animate-spin" size={40} />
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <Loader2 className="text-[#5C6BFF] animate-spin" size={48} />
+        </div>
+      )}
+
+      {/* ЦЕНТРАЛЬНАЯ КНОПКА PLAY (для мобилок) */}
+      {!isPlaying && !isLoading && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20">
+          <div className="w-20 h-20 rounded-full bg-[#5C6BFF] flex items-center justify-center shadow-2xl animate-pulse">
+            <Play size={32} className="text-white fill-white ml-1" />
+          </div>
         </div>
       )}
 
@@ -177,36 +182,54 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
         ref={videoRef}
         src={videoUrl} 
         poster={posterUrl}
-        className="w-full h-full object-contain bg-black cursor-pointer"
+        className="w-full h-full object-contain cursor-pointer"
         playsInline
+        webkit-playsinline="true"
+        preload="metadata"
+        muted={isMuted}
         autoPlay={autoPlay}
-        onClick={togglePlay}
         onTimeUpdate={() => setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100)}
-        onCanPlayThrough={() => {
+        onWaiting={() => setIsLoading(true)}
+        onPlaying={() => {
           setIsLoading(false);
-          if (autoPlay) setIsPlaying(true);
+          setIsPlaying(true);
         }}
-        onEnded={() => setIsPlaying(false)}
+        onCanPlay={() => setIsLoading(false)}
+        onEnded={() => {
+          setIsPlaying(false);
+          setShowControls(true);
+        }}
       />
       
-      <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/90 via-transparent to-transparent transition-all duration-500 ${(showControls && !isLoading) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      {/* КОНТРОЛЛЕРЫ */}
+      <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 via-transparent transition-opacity duration-300 ${(showControls || !isPlaying) ? 'opacity-100' : 'opacity-0'}`}>
         <div className="pointer-events-auto space-y-4">
-          <div ref={progressRef} onClick={handleScrub} className="group relative w-full h-1.5 bg-white/10 rounded-full cursor-pointer overflow-hidden transition-all hover:h-2">
-            <div className="absolute top-0 left-0 h-full bg-[#5C6BFF] shadow-[0_0_15px_rgba(92,107,255,0.6)]" style={{ width: `${progress}%` }} />
+          <div 
+            ref={progressRef} 
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = progressRef.current.getBoundingClientRect();
+              const scrubTime = ((e.clientX - rect.left) / rect.width) * videoRef.current.duration;
+              videoRef.current.currentTime = scrubTime;
+            }} 
+            className="group relative w-full h-1.5 bg-white/20 rounded-full cursor-pointer hover:h-2 transition-all"
+          >
+            <div className="absolute top-0 left-0 h-full bg-[#5C6BFF]" style={{ width: `${progress}%` }} />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
-              <button onClick={togglePlay} className="text-white hover:text-[#5C6BFF] transition-transform active:scale-90">
+              <button onClick={togglePlay} className="text-white">
                 {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
               </button>
-              <button onClick={() => { videoRef.current.muted = !isMuted; setIsMuted(!isMuted); }} className="text-white/70 hover:text-white transition-colors">
+              <button onClick={(e) => { 
+                e.stopPropagation();
+                videoRef.current.muted = !isMuted; 
+                setIsMuted(!isMuted); 
+              }} className="text-white/80">
                 {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
               </button>
             </div>
-            <button onClick={() => { videoRef.current.currentTime = 0; videoRef.current.play(); }} className="text-white/40 hover:text-white transition-colors">
-              <RotateCcw size={18} />
-            </button>
           </div>
         </div>
       </div>
@@ -218,9 +241,17 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
 const VideoModal = ({ isOpen, videoUrl, posterUrl, onClose }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 lg:backdrop-blur-xl animate-fade-in" onClick={onClose}>
-      <button className="absolute top-6 right-6 text-white/40 hover:text-white transition-all z-[110] hover:rotate-90"><X size={32} /></button>
-      <div className="relative h-full max-h-[90vh] aspect-[9/16] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-black" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 animate-fade-in" 
+      onClick={onClose}
+    >
+      <button className="absolute top-6 right-6 text-white/60 hover:text-white z-[110]">
+        <X size={32} />
+      </button>
+      <div 
+        className="relative h-full max-h-[85vh] aspect-[9/16] rounded-[2rem] overflow-hidden border border-white/10 bg-black shadow-2xl" 
+        onClick={(e) => e.stopPropagation()}
+      >
         <CustomPlayer videoUrl={videoUrl} posterUrl={posterUrl} autoPlay={true} />
       </div>
     </div>
