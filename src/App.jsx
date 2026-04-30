@@ -135,48 +135,41 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
   const videoRef = React.useRef(null);
   const progressRef = React.useRef(null);
   
-  // Устанавливаем начальное состояние загрузки
   const [isLoading, setIsLoading] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
-  const [isMuted, setIsMuted] = React.useState(autoPlay); 
+  // ФИКС ЗВУКА: по умолчанию звук включен (false для muted)
+  const [isMuted, setIsMuted] = React.useState(false); 
   const [showControls, setShowControls] = React.useState(true);
 
-  // Дополнительная проверка для Safari: если видео уже в кэше, 
-  // события загрузки могут не сработать повторно.
+  // Обработка автоплея со звуком для Safari
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleCheckReady = () => {
-      // readyState 3 (HAVE_FUTURE_DATA) или 4 (HAVE_ENOUGH_DATA) 
-      // означают, что видео готово к воспроизведению
-      if (video.readyState >= 3) {
-        setIsLoading(false);
+    if (autoPlay && videoRef.current) {
+      // Пытаемся воспроизвести со звуком
+      const playPromise = videoRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Если браузер заблокировал автоплей со звуком, 
+          // включаем mute и пробуем снова (стандарт для Safari)
+          setIsMuted(true);
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play().catch(e => console.log("Autoplay failed", e));
+          }
+        });
       }
-    };
-
-    handleCheckReady();
-    
-    // Добавляем слушатель на случай, если состояние изменится
-    video.addEventListener('loadedmetadata', handleCheckReady);
-    return () => video.removeEventListener('loadedmetadata', handleCheckReady);
-  }, [videoUrl]);
+    }
+  }, [autoPlay, videoUrl]);
 
   const togglePlay = (e) => {
     if (e) e.stopPropagation();
     if (!videoRef.current) return;
     
     if (videoRef.current.paused) {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlaying(true);
-            setIsLoading(false); // На случай, если лоадер застрял
-          })
-          .catch(error => console.log("Playback prevented:", error));
-      }
+      videoRef.current.play()
+        .then(() => setIsPlaying(true))
+        .catch(error => console.log("Playback blocked:", error));
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
@@ -190,20 +183,19 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
       onMouseLeave={() => isPlaying && setShowControls(false)}
       onClick={togglePlay}
     >
-      {/* Лоадер: показываем только когда идет реальное ожидание (onWaiting) */}
-      {isLoading && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <Loader2 className="text-[#5C6BFF] animate-spin" size={40} />
-        </div>
-      )}
-
-      {/* Кнопка Play по центру: 
-          УБРАНО условие !isLoading, чтобы кнопка была видна, даже если Safari "тупит" с лоадером */}
+      {/* ФИКС СЛОЕВ: Кнопка Play теперь имеет z-40, чтобы быть выше лоадера (z-30) */}
       {!isPlaying && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
           <div className="w-20 h-20 rounded-full bg-[#5C6BFF]/90 flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
             <Play size={32} className="text-white fill-white ml-1" />
           </div>
+        </div>
+      )}
+
+      {/* Лоадер (z-30) теперь не будет блюрить кнопку, так как она выше него */}
+      {isLoading && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <Loader2 className="text-[#5C6BFF] animate-spin" size={40} />
         </div>
       )}
 
@@ -215,17 +207,13 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
         playsInline
         webkit-playsinline="true"
         preload="metadata"
-        muted={isMuted}
-        autoPlay={autoPlay}
+        muted={isMuted} // Управляется состоянием
         onTimeUpdate={() => {
           if (videoRef.current) {
             setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
           }
         }}
-        // Оптимизированные события для управления лоадером
         onLoadedData={() => setIsLoading(false)}
-        onCanPlay={() => setIsLoading(false)}
-        onCanPlayThrough={() => setIsLoading(false)}
         onWaiting={() => setIsLoading(true)}
         onPlaying={() => {
           setIsLoading(false);
@@ -235,8 +223,8 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
         onEnded={() => setIsPlaying(false)}
       />
       
-      {/* Контроллеры */}
-      <div className={`absolute inset-0 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${(showControls || !isPlaying) ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Контроллеры (z-50) */}
+      <div className={`absolute inset-0 z-50 pointer-events-none flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${(showControls || !isPlaying) ? 'opacity-100' : 'opacity-0'}`}>
         <div className="pointer-events-auto space-y-4">
           <div 
             ref={progressRef} 
@@ -259,10 +247,9 @@ const CustomPlayer = ({ videoUrl, posterUrl, autoPlay = false }) => {
               <button 
                 onClick={(e) => { 
                   e.stopPropagation();
-                  if (videoRef.current) {
-                    videoRef.current.muted = !isMuted; 
-                    setIsMuted(!isMuted);
-                  }
+                  const newMuted = !isMuted;
+                  videoRef.current.muted = newMuted; 
+                  setIsMuted(newMuted); 
                 }} 
                 className="text-white/70 hover:text-white"
               >
