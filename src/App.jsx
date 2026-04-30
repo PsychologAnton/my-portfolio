@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle, MessageSquare, FileText, FileCheck, CreditCard, Pause, VolumeX, Maximize, RotateCcw, Sun, Moon} from 'lucide-react';
-
+import { Play, Film, Scissors, MonitorPlay, CheckCircle2, ChevronRight, Menu, X, Sparkles, Loader2, Wand2, Volume2, PlayCircle, MessageSquare, FileText, FileCheck, CreditCard, Pause, VolumeX, Maximize, RotateCcw, Sun, Moon, MessageCircle, Mail, Send } from 'lucide-react';
 // ==========================================
 // 1. КОНФИГУРАЦИЯ И СТИЛИ
 // ==========================================
@@ -590,16 +589,38 @@ export default function App() {
       
       <h2 className="font-primary text-5xl md:text-7xl text-white mb-8 uppercase relative z-10 tracking-tight drop-shadow-md">Начнем работу?</h2>
       
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-10">
-        <a 
-          href="https://t.me/reelz4biz" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="bg-[#5C6BFF] text-white px-12 py-5 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_30px_rgba(92,107,255,0.3)] active:scale-95"
-        >
-          Telegram @reelz4biz
-        </a>
-      </div>
+    <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 flex-wrap">
+      {/* Telegram */}
+      <a 
+        href="https://t.me/reelz4biz" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="group flex items-center gap-3 bg-[#0088CC] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center"
+      >
+        <Send size={18} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+        Telegram
+      </a>
+
+      {/* WhatsApp */}
+      <a 
+        href="https://wa.me/79815871462" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="group flex items-center gap-3 bg-[#25D366] text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 w-full md:w-auto justify-center"
+      >
+        <MessageCircle size={20} fill="currentColor" className="text-white" />
+        WhatsApp
+      </a>
+
+      {/* Email */}
+      <a 
+        href="mailto:drantonch@yandex.ru" 
+        className="group flex items-center gap-3 bg-[#1F2937]/90 backdrop-blur-xl border border-white/10 text-white px-8 py-4 rounded-full font-secondary font-bold text-sm uppercase tracking-widest hover:bg-[#374151] hover:scale-105 transition-all active:scale-95 w-full md:w-auto justify-center shadow-lg"
+      >
+        <Mail size={18} className="text-white" />
+        <span>Почта</span>
+      </a>
+    </div>
     </section>
 
       {/* Модальное окно для всех видео */}
